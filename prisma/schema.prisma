@@ -1,0 +1,28 @@
+// Esquema de la base de datos. SQLite: es un archivo local, no necesitás
+// instalar ni configurar ningún servidor de base de datos aparte para
+// empezar a probar el sistema. Más adelante, cuando quieras pasar a
+// producción, se puede migrar a Postgres cambiando solo estas 3 líneas
+// de "datasource" (el resto del código no cambia).
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+enum Role {
+  ADMIN
+  CLIENTE
+}
+
+model User {
+  id           String   @id @default(cuid())
+  name         String
+  email        String   @unique
+  passwordHash String
+  role         Role     @default(CLIENTE)
+  createdAt    DateTime @default(now())
+}
