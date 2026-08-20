@@ -1,11 +1,11 @@
-// Esquema de la base de datos. SQLite: es un archivo local, no necesitás
-// instalar ni configurar ningún servidor de base de datos aparte para
-// empezar a probar el sistema. Más adelante, cuando quieras pasar a
-// producción, se puede migrar a Postgres cambiando solo estas 3 líneas
-// de "datasource" (el resto del código no cambia).
+// Esquema de la base de datos. Ahora corre contra Postgres en la nube
+// (Neon), para que el sistema pueda quedar publicado en internet y
+// cualquiera con el link pueda entrar, sin depender de un archivo local
+// en esta compu. Antes usaba SQLite (un archivo local) para probar más
+// rápido; se migró cambiando estas 3 líneas de "datasource".
 
 datasource db {
-  provider = "sqlite"
+  provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
@@ -13,16 +13,31 @@ generator client {
   provider = "prisma-client-js"
 }
 
-enum Role {
-  ADMIN
-  CLIENTE
+// El rol se guarda como texto simple ("ADMIN" o "CLIENTE") en vez de un
+// enum de Prisma, para no tener que tocar el resto del código al migrar
+// desde SQLite (que no soportaba enums). Ver lib/auth.js,
+// app/(app)/admin/actions.js y prisma/seed.js.
+model User {
+  id           String    @id @default(cuid())
+  name         String
+  email        String    @unique
+  passwordHash String
+  role         String    @default("CLIENTE")
+  createdAt    DateTime  @default(now())
+  projects     Project[]
 }
 
-model User {
-  id           String   @id @default(cuid())
-  name         String
-  email        String   @unique
-  passwordHash String
-  role         Role     @default(CLIENTE)
-  createdAt    DateTime @default(now())
+// Estados posibles de "status", igual que las columnas del panel de
+// seguimiento de la landing: BACKLOG, EN_CURSO, EN_REVISION, ENTREGADO.
+// (SQLite no soporta enums, así que también es texto simple.)
+model Project {
+  id        String   @id @default(cuid())
+  name      String
+  status    String   @default("BACKLOG")
+  progress  Int      @default(0)
+  notes     String?
+  client    User     @relation(fields: [clientId], references: [id])
+  clientId  String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }

@@ -1,14 +1,20 @@
 "use client";
 
 import { Suspense, useState } from "react";
-import { signIn } from "next-auth/react";
+import { signIn, getSession } from "next-auth/react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 
 function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const callbackUrl = searchParams.get("callbackUrl") || "/admin";
+  // Si el middleware nos mandó acá porque intentaste entrar a una página
+  // protegida (por ejemplo /admin/usuarios), "callbackUrl" trae esa
+  // dirección y volvemos ahí después de loguearte. Si no hay ninguna
+  // (entraste al login directamente), decidimos el destino según el rol
+  // una vez que sabemos quién sos: los admins van a /admin, los clientes
+  // a /panel.
+  const callbackUrlExplicito = searchParams.get("callbackUrl");
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -26,14 +32,20 @@ function LoginForm() {
       redirect: false,
     });
 
-    setLoading(false);
-
     if (result?.error) {
+      setLoading(false);
       setError("Email o contraseña incorrectos.");
       return;
     }
 
-    router.push(callbackUrl);
+    let destino = callbackUrlExplicito;
+    if (!destino) {
+      const session = await getSession();
+      destino = session?.user?.role === "ADMIN" ? "/admin" : "/panel";
+    }
+
+    setLoading(false);
+    router.push(destino);
     router.refresh();
   }
 

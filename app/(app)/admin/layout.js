@@ -33,6 +33,12 @@ export default async function AdminLayout({ children }) {
         >
           Usuarios
         </Link>
+        <Link
+          href="/admin/proyectos"
+          className="rounded-lg px-3 py-2 text-sm text-muted hover:bg-white/5 hover:text-ink"
+        >
+          Proyectos
+        </Link>
       </aside>
 
       <div className="flex-1">

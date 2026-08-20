@@ -17,21 +17,39 @@ export default function RegistroPage() {
     setError("");
     setLoading(true);
 
-    const res = await fetch("/api/registro", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ name, email, password }),
-    });
+    try {
+      const res = await fetch("/api/registro", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name, email, password }),
+      });
 
-    const data = await res.json();
-    setLoading(false);
+      // Si el servidor se cayó o tiró un error que no devuelve JSON
+      // (por ejemplo la pantalla de error de Next.js), res.json() explota.
+      // Lo atajamos para no dejar el botón trabado en "Creando cuenta...".
+      let data = {};
+      try {
+        data = await res.json();
+      } catch {
+        setError(
+          "El servidor no respondió como se esperaba. Mirá la terminal donde corre 'npm run dev' por si hay un error en rojo."
+        );
+        return;
+      }
 
-    if (!res.ok) {
-      setError(data.error || "No se pudo crear la cuenta.");
-      return;
+      if (!res.ok) {
+        setError(data.error || "No se pudo crear la cuenta.");
+        return;
+      }
+
+      // Cuenta creada: volvemos al inicio (donde está el logo y los
+      // botones de "Iniciar sesión" / "Crear cuenta"), no directo al login.
+      router.push("/");
+    } catch (err) {
+      setError("No se pudo conectar con el servidor. ¿Sigue corriendo 'npm run dev'?");
+    } finally {
+      setLoading(false);
     }
-
-    router.push("/login");
   }
 
   return (
