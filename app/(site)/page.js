@@ -122,13 +122,17 @@ export default function LandingPage() {
           <div className="wrap">
             <span className="stack-label">Tecnologías y herramientas</span>
             <div className="stack-items">
-              <span>HTML · CSS · JavaScript</span>
-              <span>PHP</span>
+              <span>React · Next.js · Nest.js</span>
+              <span>TypeScript · JavaScript · Node.js</span>
+              <span>Prisma · PostgreSQL</span>
               <span>MySQL · MariaDB</span>
+              <span>Tailwind CSS</span>
+              <span>NextAuth</span>
+              <span>Vercel</span>
+              <span>Docker</span>
               <span>Git · GitHub</span>
               <span>APIs</span>
               <span>Mercado Pago</span>
-              <span>Hosting web</span>
               <span>Automatizaciones</span>
             </div>
           </div>
@@ -673,10 +677,12 @@ export default function LandingPage() {
                 </button>
                 <div className="faq-a">
                   <p>
-                    Trabajamos con tecnologías web y bases de datos como
-                    HTML, CSS, JavaScript, PHP, MySQL/MariaDB, Git y GitHub,
-                    además de integraciones y servicios externos según cada
-                    proyecto.
+                    Trabajamos con React, Next.js y Nest.js en el frontend y
+                    backend, bases de datos como PostgreSQL y MySQL/MariaDB,
+                    Prisma como ORM, autenticación con NextAuth, Git y
+                    GitHub para el control de versiones, y publicamos los
+                    proyectos en Vercel, además de integraciones y servicios
+                    externos según cada proyecto.
                   </p>
                 </div>
               </div>
