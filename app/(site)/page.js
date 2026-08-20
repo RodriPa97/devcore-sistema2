@@ -11,15 +11,149 @@ export default function LandingPage() {
   return (
     <>
       <header className="site">
+        <a href="#seguimiento" className="nav-banner">
+          Ahora podés seguir el progreso de tu proyecto en tiempo real desde
+          tu panel de cliente <span className="chev">›</span>
+        </a>
         <nav className="nav">
           <a href="#" className="nav-logo">
             <img src="/logo-horizontal.webp" alt="DevCore" />
           </a>
           <div className="nav-links">
-            <a href="#servicios">Servicios</a>
-            <a href="#industrias">Soluciones</a>
-            <a href="#planes">Cómo trabajamos</a>
-            <a href="#faq">FAQ</a>
+            <div className="nav-item">
+              <a href="#servicios" className="nav-link">
+                Servicios <span className="nav-caret">▾</span>
+              </a>
+              <div className="nav-dropdown">
+                <div className="nav-dd-col">
+                  <span className="nav-dd-heading">Qué hacemos</span>
+                  <a href="#servicios" className="nav-dd-item">
+                    <span className="nav-dd-title">Analizar</span>
+                    <span className="nav-dd-desc">
+                      Relevamos procesos y necesidades
+                    </span>
+                  </a>
+                  <a href="#servicios" className="nav-dd-item">
+                    <span className="nav-dd-title">Diseñar</span>
+                    <span className="nav-dd-desc">
+                      Pantallas y flujo de trabajo
+                    </span>
+                  </a>
+                  <a href="#servicios" className="nav-dd-item">
+                    <span className="nav-dd-title">Desarrollar</span>
+                    <span className="nav-dd-desc">
+                      Sistemas y paneles a medida
+                    </span>
+                  </a>
+                </div>
+                <div className="nav-dd-col">
+                  <span className="nav-dd-heading">Cómo lo hacemos</span>
+                  <a href="#servicios" className="nav-dd-item">
+                    <span className="nav-dd-title">Integrar</span>
+                    <span className="nav-dd-desc">
+                      Pagos, APIs y servicios externos
+                    </span>
+                  </a>
+                  <a href="#servicios" className="nav-dd-item">
+                    <span className="nav-dd-title">Publicar</span>
+                    <span className="nav-dd-desc">
+                      Puesta en marcha en internet
+                    </span>
+                  </a>
+                  <a href="#servicios" className="nav-dd-item">
+                    <span className="nav-dd-title">Mantener</span>
+                    <span className="nav-dd-desc">
+                      Mejoras y soporte continuo
+                    </span>
+                  </a>
+                </div>
+              </div>
+            </div>
+
+            <div className="nav-item">
+              <a href="#industrias" className="nav-link">
+                Soluciones <span className="nav-caret">▾</span>
+              </a>
+              <div className="nav-dropdown">
+                <div className="nav-dd-col">
+                  <span className="nav-dd-heading">Para tu negocio</span>
+                  <a href="#industrias" className="nav-dd-item">
+                    <span className="nav-dd-title">Sistemas de gestión</span>
+                    <span className="nav-dd-desc">
+                      Panel, usuarios y reportes
+                    </span>
+                  </a>
+                  <a href="#industrias" className="nav-dd-item">
+                    <span className="nav-dd-title">Stock y ventas</span>
+                    <span className="nav-dd-desc">
+                      Productos, movimientos y ventas
+                    </span>
+                  </a>
+                  <a href="#industrias" className="nav-dd-item">
+                    <span className="nav-dd-title">Farmacias</span>
+                    <span className="nav-dd-desc">Gestión y administración</span>
+                  </a>
+                </div>
+                <div className="nav-dd-col">
+                  <span className="nav-dd-heading">Más soluciones</span>
+                  <a href="#industrias" className="nav-dd-item">
+                    <span className="nav-dd-title">Comercios y gastronomía</span>
+                    <span className="nav-dd-desc">
+                      Pedidos, ventas y paneles
+                    </span>
+                  </a>
+                  <a href="#industrias" className="nav-dd-item">
+                    <span className="nav-dd-title">Sitios web</span>
+                    <span className="nav-dd-desc">
+                      Landing pages institucionales
+                    </span>
+                  </a>
+                  <a href="#industrias" className="nav-dd-item">
+                    <span className="nav-dd-title">Integraciones</span>
+                    <span className="nav-dd-desc">
+                      Pagos, APIs y automatización
+                    </span>
+                  </a>
+                </div>
+              </div>
+            </div>
+
+            <div className="nav-item">
+              <a href="#planes" className="nav-link">
+                Recursos <span className="nav-caret">▾</span>
+              </a>
+              <div className="nav-dropdown">
+                <div className="nav-dd-col">
+                  <span className="nav-dd-heading">Empresa</span>
+                  <a href="#planes" className="nav-dd-item">
+                    <span className="nav-dd-title">Cómo trabajamos</span>
+                    <span className="nav-dd-desc">
+                      Nuestro proceso paso a paso
+                    </span>
+                  </a>
+                  <a href="#seguimiento" className="nav-dd-item">
+                    <span className="nav-dd-title">Seguimiento de proyectos</span>
+                    <span className="nav-dd-desc">
+                      Transparencia en cada etapa
+                    </span>
+                  </a>
+                </div>
+                <div className="nav-dd-col">
+                  <span className="nav-dd-heading">Ayuda</span>
+                  <a href="#faq" className="nav-dd-item">
+                    <span className="nav-dd-title">Preguntas frecuentes</span>
+                    <span className="nav-dd-desc">Resolvemos tus dudas</span>
+                  </a>
+                  <a
+                    href="mailto:devcore97@gmail.com"
+                    className="nav-dd-item"
+                  >
+                    <span className="nav-dd-title">Contacto</span>
+                    <span className="nav-dd-desc">Escribinos directamente</span>
+                  </a>
+                </div>
+              </div>
+            </div>
           </div>
           <div className="nav-cta">
             <Link href="/login" className="btn btn-primary">
