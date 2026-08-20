@@ -1,5 +1,5 @@
-// Este script crea (o actualiza) el usuario administrador inicial, usando
-// el email y contraseña que pusiste en tu archivo ".env".
+// Este script crea el usuario administrador inicial, usando las variables
+// explícitas de tu archivo ".env". No sobrescribe cuentas existentes.
 // Se corre con: npm run seed
 
 const { PrismaClient } = require("@prisma/client");
@@ -8,14 +8,35 @@ const bcrypt = require("bcryptjs");
 const prisma = new PrismaClient();
 
 async function main() {
-  const email = process.env.ADMIN_EMAIL || "admin@devcore.com";
-  const password = process.env.ADMIN_PASSWORD || "CambiarEsta123!";
+  const email = (process.env.ADMIN_EMAIL || "").trim().toLowerCase();
+  const password = process.env.ADMIN_PASSWORD || "";
+
+  if (
+    !email ||
+    !email.includes("@") ||
+    password.length < 12 ||
+    /cambiar|replace|example/i.test(password)
+  ) {
+    throw new Error(
+      "ADMIN_EMAIL y ADMIN_PASSWORD son obligatorios; la contraseña debe ser aleatoria y tener al menos 12 caracteres."
+    );
+  }
+
+  const existing = await prisma.user.findUnique({ where: { email } });
+  if (existing) {
+    if (existing.role !== "ADMIN") {
+      throw new Error(
+        "La cuenta indicada ya existe como CLIENTE. No se promoverá automáticamente desde el seed."
+      );
+    }
+    console.log(`El administrador ${email} ya existe; no se modificó.`);
+    return;
+  }
+
   const passwordHash = await bcrypt.hash(password, 10);
 
-  const admin = await prisma.user.upsert({
-    where: { email },
-    update: { role: "ADMIN", passwordHash },
-    create: {
+  const admin = await prisma.user.create({
+    data: {
       name: "Administrador DevCore",
       email,
       passwordHash,
@@ -26,7 +47,7 @@ async function main() {
   console.log("Usuario administrador listo:");
   console.log("  Email:   " + admin.email);
   console.log("  Rol:     " + admin.role);
-  console.log("  (La contraseña es la que pusiste en ADMIN_PASSWORD en tu .env)");
+  console.log("  La contraseña se leyó desde ADMIN_PASSWORD y no se imprime.");
 }
 
 main()

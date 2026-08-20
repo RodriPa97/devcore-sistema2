@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { cambiarRol, crearAdmin } from "../actions";
+import { ConfirmSubmitButton, FormSubmitButton } from "@/components/FormSubmitButton";
 
 function UsersTable({ usuarios }) {
   if (usuarios.length === 0) {
@@ -11,7 +12,8 @@ function UsersTable({ usuarios }) {
   }
 
   return (
-    <table className="w-full text-left text-sm">
+    <div className="overflow-x-auto">
+      <table className="w-full min-w-[620px] text-left text-sm">
       <thead className="border-b border-white/10 bg-white/[0.02]">
         <tr className="font-mono text-[11px] uppercase tracking-wide text-muted-2">
           <th className="px-5 py-3">Nombre</th>
@@ -45,37 +47,52 @@ function UsersTable({ usuarios }) {
                   name="nuevoRol"
                   value={u.role === "ADMIN" ? "CLIENTE" : "ADMIN"}
                 />
-                <button
-                  type="submit"
+                <ConfirmSubmitButton
+                  message={
+                    u.role === "ADMIN"
+                      ? `¿Quitar el rol de administrador a ${u.name}?`
+                      : `¿Hacer administrador a ${u.name}?`
+                  }
                   className="font-mono text-xs text-teal hover:underline"
                 >
                   {u.role === "ADMIN" ? "Quitar admin" : "Hacer administrador"}
-                </button>
+                </ConfirmSubmitButton>
               </form>
             </td>
           </tr>
         ))}
       </tbody>
-    </table>
+      </table>
+    </div>
   );
 }
 
+export const dynamic = "force-dynamic";
+
 export default async function UsuariosPage({ searchParams }) {
+  const params = await searchParams;
   const usuarios = await prisma.user.findMany({
     orderBy: { createdAt: "desc" },
+    select: {
+      id: true,
+      name: true,
+      email: true,
+      role: true,
+      createdAt: true,
+    },
   });
 
   const administradores = usuarios.filter((u) => u.role === "ADMIN");
-  const clientes = usuarios.filter((u) => u.role !== "ADMIN");
+  const clientes = usuarios.filter((u) => u.role === "CLIENTE");
 
-  const error = searchParams?.error;
-  const ok = searchParams?.ok;
+  const error = params?.error;
+  const ok = params?.ok;
 
   return (
     <div className="flex flex-col gap-8">
       <div>
         <span className="font-mono text-xs uppercase tracking-widest text-teal">
-          // Usuarios
+          {"// Usuarios"}
         </span>
         <h1 className="font-disp mt-2 text-2xl font-semibold">
           Usuarios y roles
@@ -110,34 +127,51 @@ export default async function UsuariosPage({ searchParams }) {
           action={crearAdmin}
           className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-3"
         >
+          <label htmlFor="admin-name" className="sr-only">
+            Nombre
+          </label>
           <input
+            id="admin-name"
             type="text"
             name="name"
             required
+            maxLength={120}
+            autoComplete="name"
             placeholder="Nombre"
             className="input-field rounded-md px-3 py-2 text-sm"
           />
+          <label htmlFor="admin-email" className="sr-only">
+            Email
+          </label>
           <input
+            id="admin-email"
             type="email"
             name="email"
             required
+            autoComplete="email"
             placeholder="Email"
             className="input-field rounded-md px-3 py-2 text-sm"
           />
+          <label htmlFor="admin-password" className="sr-only">
+            Contraseña
+          </label>
           <input
+            id="admin-password"
             type="password"
             name="password"
             required
-            minLength={8}
-            placeholder="Contraseña (mín. 8 caracteres)"
+            minLength={12}
+            maxLength={72}
+            autoComplete="new-password"
+            placeholder="Contraseña (mín. 12 caracteres)"
             className="input-field rounded-md px-3 py-2 text-sm"
           />
-          <button
-            type="submit"
+          <FormSubmitButton
+            pendingLabel="Creando..."
             className="btn-primary rounded-lg px-4 py-2 font-mono text-sm font-medium sm:col-span-3 sm:w-fit"
           >
             Crear administrador
-          </button>
+          </FormSubmitButton>
         </form>
       </div>
 

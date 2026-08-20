@@ -1,27 +1,43 @@
 import { prisma } from "@/lib/prisma";
 import { ESTADOS_PROYECTO } from "@/lib/estadosProyecto";
 import { crearProyecto, actualizarProyecto, eliminarProyecto } from "../actions";
+import {
+  ConfirmSubmitButton,
+  FormSubmitButton,
+} from "@/components/FormSubmitButton";
+
+export const dynamic = "force-dynamic";
 
 export default async function ProyectosAdminPage({ searchParams }) {
+  const params = await searchParams;
   const [proyectos, clientes] = await Promise.all([
     prisma.project.findMany({
-      include: { client: true },
+      select: {
+        id: true,
+        name: true,
+        status: true,
+        progress: true,
+        notes: true,
+        updatedAt: true,
+        client: { select: { id: true, name: true, email: true } },
+      },
       orderBy: { createdAt: "desc" },
     }),
     prisma.user.findMany({
       where: { role: "CLIENTE" },
       orderBy: { name: "asc" },
+      select: { id: true, name: true, email: true },
     }),
   ]);
 
-  const error = searchParams?.error;
-  const ok = searchParams?.ok;
+  const error = params?.error;
+  const ok = params?.ok;
 
   return (
     <div className="flex flex-col gap-8">
       <div>
         <span className="font-mono text-xs uppercase tracking-widest text-teal">
-          // Proyectos
+          {"// Proyectos"}
         </span>
         <h1 className="font-disp mt-2 text-2xl font-semibold">
           Proyectos de clientes
@@ -60,14 +76,23 @@ export default async function ProyectosAdminPage({ searchParams }) {
             action={crearProyecto}
             className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-4"
           >
+            <label htmlFor="project-name" className="sr-only">
+              Nombre del proyecto
+            </label>
             <input
+              id="project-name"
               type="text"
               name="name"
               required
+              maxLength={160}
               placeholder="Nombre del proyecto"
               className="input-field rounded-md px-3 py-2 text-sm sm:col-span-2"
             />
+            <label htmlFor="project-client" className="sr-only">
+              Cliente
+            </label>
             <select
+              id="project-client"
               name="clientId"
               required
               defaultValue=""
@@ -82,7 +107,11 @@ export default async function ProyectosAdminPage({ searchParams }) {
                 </option>
               ))}
             </select>
+            <label htmlFor="project-status" className="sr-only">
+              Estado inicial
+            </label>
             <select
+              id="project-status"
               name="status"
               defaultValue="BACKLOG"
               className="input-field rounded-md px-3 py-2 text-sm"
@@ -93,12 +122,12 @@ export default async function ProyectosAdminPage({ searchParams }) {
                 </option>
               ))}
             </select>
-            <button
-              type="submit"
+            <FormSubmitButton
+              pendingLabel="Creando..."
               className="btn-primary rounded-lg px-4 py-2 font-mono text-sm font-medium sm:col-span-4 sm:w-fit"
             >
               Crear proyecto
-            </button>
+            </FormSubmitButton>
           </form>
         )}
       </div>
@@ -109,7 +138,8 @@ export default async function ProyectosAdminPage({ searchParams }) {
             Todavía no creaste ningún proyecto.
           </p>
         ) : (
-          <table className="w-full text-left text-sm">
+          <div className="overflow-x-auto">
+            <table className="w-full min-w-[980px] text-left text-sm">
             <thead className="border-b border-white/10 bg-white/[0.02]">
               <tr className="font-mono text-[11px] uppercase tracking-wide text-muted-2">
                 <th className="px-5 py-3">Proyecto</th>
@@ -135,10 +165,17 @@ export default async function ProyectosAdminPage({ searchParams }) {
                     <form
                       action={actualizarProyecto}
                       className="flex flex-col gap-2"
-                    >
+                      >
                       <input type="hidden" name="id" value={p.id} />
+                      <input
+                        type="hidden"
+                        name="updatedAt"
+                        value={p.updatedAt.toISOString()}
+                      />
                       <select
+                        id={`project-${p.id}-status`}
                         name="status"
+                        aria-label={`Estado de ${p.name}`}
                         defaultValue={p.status}
                         className="input-field rounded-md px-2 py-1 text-xs"
                       >
@@ -149,26 +186,30 @@ export default async function ProyectosAdminPage({ searchParams }) {
                         ))}
                       </select>
                       <input
+                        id={`project-${p.id}-progress`}
                         type="number"
                         name="progress"
+                        aria-label={`Avance de ${p.name}`}
                         min={0}
                         max={100}
                         defaultValue={p.progress}
                         className="input-field w-20 rounded-md px-2 py-1 text-xs"
                       />
                       <input
+                        id={`project-${p.id}-notes`}
                         type="text"
                         name="notes"
+                        aria-label={`Notas de ${p.name}`}
                         defaultValue={p.notes || ""}
                         placeholder="Nota para el cliente (opcional)"
                         className="input-field rounded-md px-2 py-1 text-xs"
                       />
-                      <button
-                        type="submit"
+                      <FormSubmitButton
+                        pendingLabel="Guardando..."
                         className="w-fit font-mono text-[11px] text-teal hover:underline"
                       >
                         Guardar cambios
-                      </button>
+                      </FormSubmitButton>
                     </form>
                   </td>
                   <td className="px-5 py-3 align-top">{p.progress}%</td>
@@ -178,18 +219,19 @@ export default async function ProyectosAdminPage({ searchParams }) {
                   <td className="px-5 py-3 align-top">
                     <form action={eliminarProyecto}>
                       <input type="hidden" name="id" value={p.id} />
-                      <button
-                        type="submit"
+                      <ConfirmSubmitButton
+                        message={`¿Eliminar el proyecto "${p.name}"? Esta acción no se puede deshacer.`}
                         className="font-mono text-[11px] text-red-400 hover:underline"
                       >
                         Eliminar
-                      </button>
+                      </ConfirmSubmitButton>
                     </form>
                   </td>
                 </tr>
               ))}
             </tbody>
-          </table>
+            </table>
+          </div>
         )}
       </div>
     </div>

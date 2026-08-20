@@ -1,23 +1,24 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
-import { SignOutButton } from "./SignOutButton";
+import { requireAdmin, UnauthorizedError } from "@/lib/authz";
+import { SignOutButton } from "@/components/SignOutButton";
 
-// El middleware (middleware.js) ya bloquea /admin/* a nivel de red, pero
+// El proxy (proxy.js) ya bloquea /admin/* a nivel de red, pero
 // repetimos el chequeo acá adentro (defensa en profundidad): si por
 // cualquier motivo se llega a este layout sin ser admin, no se renderiza
 // nada del panel.
 export default async function AdminLayout({ children }) {
-  const session = await getServerSession(authOptions);
-
-  if (!session || session.user?.role !== "ADMIN") {
+  let user;
+  try {
+    user = await requireAdmin();
+  } catch (error) {
+    if (!(error instanceof UnauthorizedError)) throw error;
     redirect("/login");
   }
 
   return (
     <div className="flex min-h-screen">
-      <aside className="card m-4 hidden w-56 shrink-0 flex-col gap-1 rounded-2xl p-4 sm:flex">
+      <aside className="card m-4 flex w-auto shrink-0 flex-row gap-1 overflow-x-auto rounded-2xl p-3 sm:w-56 sm:flex-col sm:p-4">
         <span className="mb-4 font-mono text-[11px] uppercase tracking-widest text-muted-2">
           devcore / admin
         </span>
@@ -45,8 +46,8 @@ export default async function AdminLayout({ children }) {
         <header className="flex items-center justify-between border-b border-white/5 px-6 py-4">
           <span className="font-mono text-xs text-muted">
             Conectado como{" "}
-            <span className="text-ink">{session.user?.name}</span>{" "}
-            <span className="text-teal">({session.user?.role})</span>
+            <span className="text-ink">{user.name}</span>{" "}
+            <span className="text-teal">({user.role})</span>
           </span>
           <SignOutButton />
         </header>

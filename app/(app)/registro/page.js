@@ -44,7 +44,7 @@ export default function RegistroPage() {
 
       // Cuenta creada: volvemos al inicio (donde está el logo y los
       // botones de "Iniciar sesión" / "Crear cuenta"), no directo al login.
-      router.push("/");
+      router.push("/login?registered=1");
     } catch (err) {
       setError("No se pudo conectar con el servidor. ¿Sigue corriendo 'npm run dev'?");
     } finally {
@@ -56,16 +56,21 @@ export default function RegistroPage() {
     <main className="flex min-h-screen items-center justify-center px-6">
       <div className="card w-full max-w-sm p-8">
         <span className="font-mono text-xs uppercase tracking-widest text-teal">
-          // Crear cuenta
+           {"// Crear cuenta"}
         </span>
         <h1 className="font-disp mt-2 text-2xl font-semibold">Registro</h1>
 
         <form onSubmit={handleSubmit} className="mt-6 flex flex-col gap-4">
           <div>
-            <label className="mb-1 block text-xs text-muted">Nombre</label>
+            <label htmlFor="register-name" className="mb-1 block text-xs text-muted">
+              Nombre
+            </label>
             <input
+              id="register-name"
               type="text"
               required
+              maxLength={120}
+              autoComplete="name"
               value={name}
               onChange={(e) => setName(e.target.value)}
               className="input-field w-full rounded-md px-3 py-2 text-sm"
@@ -73,10 +78,14 @@ export default function RegistroPage() {
             />
           </div>
           <div>
-            <label className="mb-1 block text-xs text-muted">Email</label>
+            <label htmlFor="register-email" className="mb-1 block text-xs text-muted">
+              Email
+            </label>
             <input
+              id="register-email"
               type="email"
               required
+              autoComplete="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               className="input-field w-full rounded-md px-3 py-2 text-sm"
@@ -84,13 +93,16 @@ export default function RegistroPage() {
             />
           </div>
           <div>
-            <label className="mb-1 block text-xs text-muted">
+            <label htmlFor="register-password" className="mb-1 block text-xs text-muted">
               Contraseña
             </label>
             <input
+              id="register-password"
               type="password"
               required
               minLength={8}
+              maxLength={72}
+              autoComplete="new-password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               className="input-field w-full rounded-md px-3 py-2 text-sm"

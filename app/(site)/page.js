@@ -1,9 +1,10 @@
 import Link from "next/link";
+import Image from "next/image";
 import Script from "next/script";
 
 // Esta es la landing de DevCore (la página institucional de la empresa),
 // convertida del index.html original a JSX. Vive en el grupo de rutas
-// "(site)" con su propio layout y su propio CSS (public/landing.css) —
+// "(site)" con su propio layout y su propio CSS (landing.css) —
 // totalmente separada del sistema de gestión (login, panel, admin), que
 // vive en el grupo "(app)" con Tailwind. Así ninguno de los dos estilos
 // choca con el otro.
@@ -17,9 +18,9 @@ export default function LandingPage() {
         </a>
         <nav className="nav">
           <a href="#" className="nav-logo">
-            <img src="/logo-horizontal.webp" alt="DevCore" />
+            <Image src="/logo-horizontal.webp" alt="DevCore" width={250} height={46} priority />
           </a>
-          <div className="nav-links">
+          <div id="site-nav-links" className="nav-links">
             <div className="nav-item">
               <a href="#servicios" className="nav-link">
                 Servicios <span className="nav-caret">▾</span>
@@ -163,7 +164,13 @@ export default function LandingPage() {
               Registrarse
             </Link>
           </div>
-          <button className="nav-toggle" aria-label="Menú">
+          <button
+            type="button"
+            className="nav-toggle"
+            aria-label="Abrir menú"
+            aria-expanded="false"
+            aria-controls="site-nav-links"
+          >
             ☰
           </button>
         </nav>
@@ -733,11 +740,16 @@ export default function LandingPage() {
             </div>
             <div className="faq-list reveal">
               <div className="faq-item open">
-                <button className="faq-q">
+                <button
+                  id="faq-q-1"
+                  className="faq-q"
+                  aria-expanded="true"
+                  aria-controls="faq-a-1"
+                >
                   <span>¿DevCore hace sistemas desde cero?</span>
                   <span className="plus">+</span>
                 </button>
-                <div className="faq-a">
+                <div id="faq-a-1" className="faq-a" role="region" aria-labelledby="faq-q-1">
                   <p>
                     Sí. Podemos desarrollar una solución nueva a partir de
                     los procesos y necesidades de tu negocio, y también
@@ -748,11 +760,16 @@ export default function LandingPage() {
               </div>
 
               <div className="faq-item">
-                <button className="faq-q">
+                <button
+                  id="faq-q-2"
+                  className="faq-q"
+                  aria-expanded="false"
+                  aria-controls="faq-a-2"
+                >
                   <span>¿Cómo se define el precio?</span>
                   <span className="plus">+</span>
                 </button>
-                <div className="faq-a">
+                <div id="faq-a-2" className="faq-a" role="region" aria-labelledby="faq-q-2">
                   <p>
                     Primero relevamos lo que necesitás. Después armamos una
                     propuesta según funcionalidades, complejidad, tiempos e
@@ -764,11 +781,16 @@ export default function LandingPage() {
               </div>
 
               <div className="faq-item">
-                <button className="faq-q">
+                <button
+                  id="faq-q-3"
+                  className="faq-q"
+                  aria-expanded="false"
+                  aria-controls="faq-a-3"
+                >
                   <span>¿Trabajan solo en Formosa?</span>
                   <span className="plus">+</span>
                 </button>
-                <div className="faq-a">
+                <div id="faq-a-3" className="faq-a" role="region" aria-labelledby="faq-q-3">
                   <p>
                     No. Trabajamos de forma remota y actualmente tenemos
                     alcance en Argentina y Paraguay.
@@ -777,11 +799,16 @@ export default function LandingPage() {
               </div>
 
               <div className="faq-item">
-                <button className="faq-q">
+                <button
+                  id="faq-q-4"
+                  className="faq-q"
+                  aria-expanded="false"
+                  aria-controls="faq-a-4"
+                >
                   <span>¿Pueden integrar pagos o servicios externos?</span>
                   <span className="plus">+</span>
                 </button>
-                <div className="faq-a">
+                <div id="faq-a-4" className="faq-a" role="region" aria-labelledby="faq-q-4">
                   <p>
                     Sí, cuando el proyecto lo requiere podemos integrar
                     pasarelas de pago, APIs y otros servicios compatibles
@@ -791,11 +818,16 @@ export default function LandingPage() {
               </div>
 
               <div className="faq-item">
-                <button className="faq-q">
+                <button
+                  id="faq-q-5"
+                  className="faq-q"
+                  aria-expanded="false"
+                  aria-controls="faq-a-5"
+                >
                   <span>¿Qué pasa después de la entrega?</span>
                   <span className="plus">+</span>
                 </button>
-                <div className="faq-a">
+                <div id="faq-a-5" className="faq-a" role="region" aria-labelledby="faq-q-5">
                   <p>
                     Podemos continuar con soporte, mantenimiento,
                     correcciones y nuevas funcionalidades según lo que el
@@ -805,11 +837,16 @@ export default function LandingPage() {
               </div>
 
               <div className="faq-item">
-                <button className="faq-q">
+                <button
+                  id="faq-q-6"
+                  className="faq-q"
+                  aria-expanded="false"
+                  aria-controls="faq-a-6"
+                >
                   <span>¿Qué tecnologías utilizan?</span>
                   <span className="plus">+</span>
                 </button>
-                <div className="faq-a">
+                <div id="faq-a-6" className="faq-a" role="region" aria-labelledby="faq-q-6">
                   <p>
                     Trabajamos con React, Next.js y Nest.js en el frontend y
                     backend, bases de datos como PostgreSQL y MySQL/MariaDB,
@@ -850,7 +887,7 @@ export default function LandingPage() {
           <div className="foot-top">
             <div>
               <div className="foot-logo">
-                <img src="/logo-horizontal.webp" alt="DevCore" />
+                <Image src="/logo-horizontal.webp" alt="DevCore" width={150} height={28} />
               </div>
               <p className="foot-tag">
                 Software a medida para negocios que quieren ordenar,
@@ -874,7 +911,7 @@ export default function LandingPage() {
           </div>
           <div className="foot-bottom">
             <span>© 2026 DevCore</span>
-            <img className="icon" src="/icon.webp" alt="" />
+            <Image className="icon" src="/icon.webp" alt="" width={16} height={16} />
           </div>
         </div>
       </footer>

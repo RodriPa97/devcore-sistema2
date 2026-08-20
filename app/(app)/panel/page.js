@@ -1,16 +1,17 @@
 import { redirect } from "next/navigation";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
-import { SignOutButton } from "../admin/SignOutButton";
+import { getCurrentUser } from "@/lib/authz";
+import { SignOutButton } from "@/components/SignOutButton";
 import { ProjectsBoard } from "./ProjectsBoard";
 
 // Panel del cliente: cualquiera que tenga una cuenta (rol CLIENTE o
 // ADMIN) puede entrar acá y ver sus propios proyectos. No hace falta ser
 // admin para esta pantalla — a diferencia de /admin, que sí lo exige.
-export default async function PanelPage() {
-  const session = await getServerSession(authOptions);
+export const dynamic = "force-dynamic";
 
-  if (!session) {
+export default async function PanelPage() {
+  const user = await getCurrentUser();
+
+  if (!user) {
     redirect("/login?callbackUrl=/panel");
   }
 
@@ -19,14 +20,14 @@ export default async function PanelPage() {
       <header className="flex items-center justify-between border-b border-white/5 px-6 py-4">
         <span className="font-mono text-xs text-muted">
           Conectado como{" "}
-          <span className="text-ink">{session.user?.name}</span>
+            <span className="text-ink">{user.name}</span>
         </span>
         <SignOutButton />
       </header>
 
       <div className="mx-auto max-w-3xl px-6 py-10">
         <span className="font-mono text-xs uppercase tracking-widest text-teal">
-          // Mis proyectos
+          {"// Mis proyectos"}
         </span>
         <h1 className="font-disp mt-2 text-2xl font-semibold">
           Así va tu proyecto

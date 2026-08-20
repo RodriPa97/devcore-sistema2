@@ -1,3 +1,24 @@
+document.documentElement.classList.add('js');
+
+// Mobile navigation
+const nav = document.querySelector('.nav');
+const navToggle = document.querySelector('.nav-toggle');
+if(nav && navToggle){
+  const closeMenu = () => {
+    nav.classList.remove('menu-open');
+    navToggle.setAttribute('aria-expanded', 'false');
+    navToggle.setAttribute('aria-label', 'Abrir menú');
+  };
+
+  navToggle.addEventListener('click', () => {
+    const open = nav.classList.toggle('menu-open');
+    navToggle.setAttribute('aria-expanded', String(open));
+    navToggle.setAttribute('aria-label', open ? 'Cerrar menú' : 'Abrir menú');
+  });
+
+  nav.querySelectorAll('a').forEach(link => link.addEventListener('click', closeMenu));
+}
+
 // Terminal typing effect
 const lines = [
   {t:"$ devcore init retail-negocio", cls:"prompt"},
@@ -43,49 +64,32 @@ const io = new IntersectionObserver((entries)=>{
 },{threshold:0.12});
 document.querySelectorAll('.reveal').forEach(el=>io.observe(el));
 
-// Plan tabs
-document.querySelectorAll('.plan-tab').forEach(btn=>{
-  btn.addEventListener('click', ()=>{
-    document.querySelectorAll('.plan-tab').forEach(b=>b.classList.remove('active'));
-    document.querySelectorAll('.plan-panel').forEach(p=>p.classList.remove('active'));
-    btn.classList.add('active');
-    document.getElementById('panel-' + btn.dataset.tab).classList.add('active');
-  });
-});
-
 // FAQ accordion
 document.querySelectorAll('.faq-item').forEach(item=>{
   const q = item.querySelector('.faq-q');
   const a = item.querySelector('.faq-a');
-  if(item.classList.contains('open')){ a.style.maxHeight = a.scrollHeight + 'px'; }
+  const setState = (open) => {
+    q.setAttribute('aria-expanded', String(open));
+    a.setAttribute('aria-hidden', String(!open));
+    a.style.maxHeight = open ? a.scrollHeight + 'px' : null;
+  };
+
+  setState(item.classList.contains('open'));
   q.addEventListener('click', ()=>{
     const isOpen = item.classList.contains('open');
     document.querySelectorAll('.faq-item.open').forEach(o=>{
       o.classList.remove('open');
-      o.querySelector('.faq-a').style.maxHeight = null;
+      const openQuestion = o.querySelector('.faq-q');
+      const answer = o.querySelector('.faq-a');
+      openQuestion.setAttribute('aria-expanded', 'false');
+      answer.setAttribute('aria-hidden', 'true');
+      answer.style.maxHeight = null;
     });
     if(!isOpen){
       item.classList.add('open');
-      a.style.maxHeight = a.scrollHeight + 'px';
+      setState(true);
     }
   });
-});
-
-// Industry chips (visual only)
-document.querySelectorAll('.chip').forEach(chip=>{
-  chip.addEventListener('click', ()=>{
-    document.querySelectorAll('.chip').forEach(c=>c.classList.remove('active'));
-    chip.classList.add('active');
-  });
-});
-
-// Contact links: open Gmail directly instead of the Windows default mail app.
-const gmailComposeUrl = 'https://mail.google.com/mail/?view=cm&fs=1&to=devcore97%40gmail.com&su=Consulta%20desde%20DevCore';
-
-document.querySelectorAll('a[href^="mailto:devcore97@gmail.com"]').forEach(link => {
-  link.href = gmailComposeUrl;
-  link.target = '_blank';
-  link.rel = 'noopener noreferrer';
 });
 
 // NOTA: acá antes había un bloque que reescribía a mano el texto y el

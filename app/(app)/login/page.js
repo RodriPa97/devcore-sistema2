@@ -4,6 +4,7 @@ import { Suspense, useState } from "react";
 import { signIn, getSession } from "next-auth/react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
+import { safeCallbackUrl } from "@/lib/callbackUrl";
 
 function LoginForm() {
   const router = useRouter();
@@ -14,7 +15,11 @@ function LoginForm() {
   // (entraste al login directamente), decidimos el destino según el rol
   // una vez que sabemos quién sos: los admins van a /admin, los clientes
   // a /panel.
-  const callbackUrlExplicito = searchParams.get("callbackUrl");
+  const callbackUrlExplicito = safeCallbackUrl(
+    searchParams.get("callbackUrl"),
+    ""
+  );
+  const registered = searchParams.get("registered") === "1";
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -26,34 +31,38 @@ function LoginForm() {
     setError("");
     setLoading(true);
 
-    const result = await signIn("credentials", {
-      email,
-      password,
-      redirect: false,
-    });
+    try {
+      const result = await signIn("credentials", {
+        email,
+        password,
+        redirect: false,
+      });
 
-    if (result?.error) {
+      if (result?.error) {
+        setError("Email o contraseña incorrectos.");
+        return;
+      }
+
+      let destino = callbackUrlExplicito;
+      if (!destino) {
+        const session = await getSession();
+        destino = session?.user?.role === "ADMIN" ? "/admin" : "/panel";
+      }
+
+      router.push(safeCallbackUrl(destino, "/panel"));
+      router.refresh();
+    } catch {
+      setError("No se pudo conectar con el servidor. Probá de nuevo.");
+    } finally {
       setLoading(false);
-      setError("Email o contraseña incorrectos.");
-      return;
     }
-
-    let destino = callbackUrlExplicito;
-    if (!destino) {
-      const session = await getSession();
-      destino = session?.user?.role === "ADMIN" ? "/admin" : "/panel";
-    }
-
-    setLoading(false);
-    router.push(destino);
-    router.refresh();
   }
 
   return (
     <main className="flex min-h-screen items-center justify-center px-6">
       <div className="card w-full max-w-sm p-8">
         <span className="font-mono text-xs uppercase tracking-widest text-teal">
-          // Acceso
+           {"// Acceso"}
         </span>
         <h1 className="font-disp mt-2 text-2xl font-semibold">
           Iniciar sesión
@@ -61,10 +70,14 @@ function LoginForm() {
 
         <form onSubmit={handleSubmit} className="mt-6 flex flex-col gap-4">
           <div>
-            <label className="mb-1 block text-xs text-muted">Email</label>
+            <label htmlFor="login-email" className="mb-1 block text-xs text-muted">
+              Email
+            </label>
             <input
+              id="login-email"
               type="email"
               required
+              autoComplete="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               className="input-field w-full rounded-md px-3 py-2 text-sm"
@@ -72,18 +85,26 @@ function LoginForm() {
             />
           </div>
           <div>
-            <label className="mb-1 block text-xs text-muted">
+            <label htmlFor="login-password" className="mb-1 block text-xs text-muted">
               Contraseña
             </label>
             <input
+              id="login-password"
               type="password"
               required
+              autoComplete="current-password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               className="input-field w-full rounded-md px-3 py-2 text-sm"
               placeholder="••••••••"
             />
           </div>
+
+          {registered && !error && (
+            <p className="text-sm text-lime" role="status">
+              Cuenta creada. Ya podés iniciar sesión.
+            </p>
+          )}
 
           {error && (
             <p className="text-sm text-red-400" role="alert">
@@ -113,7 +134,13 @@ function LoginForm() {
 
 export default function LoginPage() {
   return (
-    <Suspense fallback={null}>
+    <Suspense
+      fallback={
+        <main className="flex min-h-screen items-center justify-center px-6">
+          <p className="text-sm text-muted">Cargando acceso...</p>
+        </main>
+      }
+    >
       <LoginForm />
     </Suspense>
   );

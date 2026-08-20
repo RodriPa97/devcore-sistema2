@@ -1,91 +1,155 @@
-# DevCore — Sistema de gestión (login + roles)
+# DevCore - Sistema de gestión
 
-Esta es la primera parte del sistema de gestión: login real, registro de
-usuarios y un panel de administrador que solo pueden ver los usuarios con
-rol `ADMIN`. Los módulos de Stock, Ventas y Administración se van a ir
-agregando adentro de este mismo proyecto más adelante.
+Aplicación full-stack para registro de clientes, autenticación, seguimiento
+de proyectos y administración de usuarios. Incluye una landing pública y un
+panel protegido para clientes y administradores.
 
-No pude instalarlo ni probarlo en mi entorno de trabajo (no tiene acceso a
-internet para bajar paquetes de npm), así que la primera vez que lo corras
-en tu computadora avisame si algo tira error y lo vemos juntos.
+## Stack
 
-## Qué necesitás tener instalado
+- Next.js 16 con App Router y React Server Components.
+- React 18.
+- NextAuth 4.24.15 con Credentials y sesiones JWT.
+- Prisma 5.18 sobre PostgreSQL.
+- Tailwind CSS para el panel y CSS propio para la landing.
+- Zod para validación de entradas.
+- Upstash Redis opcional para rate limiting distribuido.
 
-- **Node.js** versión 18 o superior. Para chequear si ya lo tenés, abrí una
-  terminal (en Windows: `cmd` o PowerShell) y escribí:
+## Requisitos
 
-  ```
-  node -v
-  ```
+- Node.js 20.9 o superior.
+- npm 11 o superior recomendado.
+- Docker Desktop para PostgreSQL local.
 
-  Si te tira un número como `v18.x` o más, ya lo tenés. Si dice que no
-  reconoce el comando, descargalo de https://nodejs.org (la versión "LTS").
+## Desarrollo local
 
-## Primera vez: cómo ponerlo en marcha
+1. Instalar dependencias:
 
-Abrí una terminal **dentro de la carpeta del proyecto** (en VS Code: menú
-Terminal → Nueva terminal) y corré, uno por uno:
+   ```bash
+   npm ci
+   ```
 
+2. Levantar PostgreSQL:
+
+   ```bash
+   docker compose up -d postgres
+   ```
+
+3. Crear la configuración local:
+
+   ```bash
+   copy .env.example .env
+   ```
+
+   En macOS/Linux usar `cp .env.example .env`.
+
+4. Completar `.env`:
+
+   - `NEXTAUTH_SECRET`: generar con
+     `node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"`.
+   - `ADMIN_EMAIL`: email del administrador inicial.
+   - `ADMIN_PASSWORD`: contraseña aleatoria de al menos 12 caracteres.
+
+5. Crear o actualizar el esquema local:
+
+   ```bash
+   npx prisma migrate dev
+   ```
+
+6. Crear el administrador inicial:
+
+   ```bash
+   npm run seed
+   ```
+
+   El seed no usa credenciales predeterminadas, no imprime contraseñas y no
+   sobrescribe cuentas existentes.
+
+7. Iniciar la aplicación:
+
+   ```bash
+   npm run dev
+   ```
+
+   Abrir `http://localhost:3000`.
+
+## Entornos
+
+- Desarrollo: PostgreSQL de Docker definido en `compose.yaml`.
+- Staging: base Neon independiente y secretos propios.
+- Producción: base Neon independiente, backups y migraciones aprobadas.
+
+En staging y producción, configurar también `UPSTASH_REDIS_REST_URL` y
+`UPSTASH_REDIS_REST_TOKEN`. Sin esas variables se usa un limitador en memoria,
+útil solo para desarrollo y no suficiente para múltiples instancias.
+
+## Migraciones
+
+Crear una migración durante el desarrollo:
+
+```bash
+npx prisma migrate dev --name descripcion_del_cambio
 ```
-npm install
+
+Aplicar migraciones ya versionadas en staging/producción:
+
+```bash
+npx prisma migrate deploy
 ```
 
-Esto descarga todo lo que el proyecto necesita. Puede tardar uno o dos
-minutos.
+No usar `prisma db push` ni `prisma migrate dev` contra producción. Hacer un
+backup antes de las migraciones que modifiquen datos o restricciones.
 
-```
-copy .env.example .env
-```
+## Scripts
 
-(En Mac/Linux sería `cp .env.example .env`). Esto crea tu archivo de
-configuración local. Podés abrirlo y cambiar el email/contraseña del
-administrador si querés, o dejarlo como está para probar.
-
-```
-npx prisma migrate dev --name init
-```
-
-Esto crea la base de datos (un archivo local, no hace falta instalar nada
-aparte) con la tabla de usuarios.
-
-```
-npm run seed
+```bash
+npm run dev       # desarrollo
+npm run lint      # ESLint
+npm run test      # pruebas unitarias
+npm run build     # build de producción
+npm run start     # servidor de producción
+npm run seed      # administrador inicial
+npm audit         # auditoría de dependencias
 ```
 
-Esto crea el usuario administrador inicial con los datos de tu `.env`
-(por defecto: `admin@devcore.com` / `CambiarEsta123!`).
+## Rutas principales
 
+| Ruta | Acceso | Función |
+| --- | --- | --- |
+| `/` | Público | Landing institucional |
+| `/login` | Público | Inicio de sesión |
+| `/registro` | Público | Registro de clientes |
+| `/panel` | Autenticado | Proyectos del usuario |
+| `/admin` | `ADMIN` | Resumen administrativo |
+| `/admin/usuarios` | `ADMIN` | Usuarios, roles y administradores |
+| `/admin/proyectos` | `ADMIN` | Alta, edición y baja de proyectos |
+
+## Seguridad
+
+- Las acciones administrativas revalidan el usuario y el rol actual en la
+  base de datos.
+- `sessionVersion` permite invalidar sesiones JWT después de cambios de rol,
+  contraseña o estado de cuenta.
+- El middleware/proxy solo es una primera barrera; no reemplaza la autorización
+  del servidor.
+- Los callbacks de login aceptan únicamente rutas internas.
+- Registro y login tienen rate limiting.
+- Los roles, estados y el rango de avance están restringidos en PostgreSQL.
+- Las acciones sensibles generan registros de auditoría.
+
+## Estructura
+
+```text
+app/(site)             landing pública
+app/(app)              login, registro, panel y administración
+app/api                Route Handlers
+components             componentes compartidos
+lib/auth.js            configuración NextAuth
+lib/authz.js           autorización contra la base actual
+lib/validation.js      esquemas y normalización
+lib/rateLimit.js       limitación distribuida o fallback local
+lib/audit.js           auditoría de acciones sensibles
+prisma/schema.prisma   modelos, enums e índices
+prisma/migrations      historial de cambios de base
+proxy.js               protección temprana de rutas privadas
+tests                  pruebas automatizadas
 ```
-npm run dev
-```
-
-Esto prende el servidor. Dejá esta terminal abierta y andá a
-**http://localhost:3000** en el navegador.
-
-## Cómo probarlo
-
-1. Entrá a `/registro` y creá una cuenta de prueba (va a quedar con rol
-   `CLIENTE`).
-2. Entrá a `/login` con esa cuenta — vas a ver que si intentás entrar a
-   `/admin` te redirige a "no autorizado", porque no sos admin.
-3. Cerrá sesión y entrá con el usuario administrador
-   (`admin@devcore.com` / la contraseña de tu `.env`).
-4. Ahora sí vas a poder entrar a `/admin` y a `/admin/usuarios`, donde
-   podés ver todos los usuarios registrados y cambiarles el rol
-   (hacer admin a un cliente, o sacarle el rol de admin a alguien).
-
-## Las próximas veces
-
-No hace falta repetir todos los pasos. Alcanza con:
-
-```
-npm run dev
-```
-
-## Estructura del proyecto (por si querés mirar el código)
-
-- `app/login`, `app/registro` — pantallas públicas.
-- `app/admin` — panel protegido, solo para rol `ADMIN`.
-- `middleware.js` — es lo que bloquea `/admin` si no sos admin.
-- `lib/auth.js` — configuración del login (NextAuth).
-- `prisma/schema.prisma` — define la tabla de usuarios y sus roles.

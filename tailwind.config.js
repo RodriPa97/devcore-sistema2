@@ -3,6 +3,7 @@ module.exports = {
   content: [
     "./app/**/*.{js,jsx}",
     "./components/**/*.{js,jsx}",
+    "./lib/**/*.{js,jsx}",
   ],
   theme: {
     extend: {
@@ -11,7 +12,7 @@ module.exports = {
         panel: "#0d1215",
         ink: "#F2F6F4",
         muted: "#8CA0A0",
-        "muted-2": "#5E7071",
+        "muted-2": "#789393",
         lime: "#8FE23A",
         teal: "#17B8A6",
       },

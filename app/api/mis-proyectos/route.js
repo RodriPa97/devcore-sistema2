@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { getCurrentUser } from "@/lib/authz";
+
+export const dynamic = "force-dynamic";
 
 // Este endpoint lo consulta el panel del cliente cada pocos segundos
 // (ver app/panel/ProjectsBoard.js) para simular "tiempo real" sin
@@ -9,16 +10,35 @@ import { prisma } from "@/lib/prisma";
 // cambia el estado de un proyecto, en la próxima consulta ya aparece
 // actualizado.
 export async function GET() {
-  const session = await getServerSession(authOptions);
+  try {
+    const user = await getCurrentUser();
+    if (!user) {
+      return NextResponse.json({ error: "No autorizado." }, { status: 401 });
+    }
 
-  if (!session) {
-    return NextResponse.json({ error: "No autorizado." }, { status: 401 });
+    const proyectos = await prisma.project.findMany({
+      where: { clientId: user.id },
+      orderBy: { createdAt: "desc" },
+      select: {
+        id: true,
+        name: true,
+        status: true,
+        progress: true,
+        notes: true,
+        createdAt: true,
+        updatedAt: true,
+      },
+    });
+
+    return NextResponse.json(
+      { proyectos },
+      { headers: { "Cache-Control": "private, no-store" } }
+    );
+  } catch (error) {
+    console.error("mis-proyectos failed", error);
+    return NextResponse.json(
+      { error: "No se pudieron cargar los proyectos." },
+      { status: 500 }
+    );
   }
-
-  const proyectos = await prisma.project.findMany({
-    where: { clientId: session.user.id },
-    orderBy: { createdAt: "desc" },
-  });
-
-  return NextResponse.json({ proyectos });
 }

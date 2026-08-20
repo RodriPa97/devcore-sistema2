@@ -1,5 +1,7 @@
 import { prisma } from "@/lib/prisma";
 
+export const dynamic = "force-dynamic";
+
 export default async function AdminDashboard() {
   const [totalUsuarios, totalAdmins] = await Promise.all([
     prisma.user.count(),
@@ -10,7 +12,7 @@ export default async function AdminDashboard() {
     <div className="flex flex-col gap-6">
       <div>
         <span className="font-mono text-xs uppercase tracking-widest text-teal">
-          // Panel
+          {"// Panel"}
         </span>
         <h1 className="font-disp mt-2 text-2xl font-semibold">
           Resumen general

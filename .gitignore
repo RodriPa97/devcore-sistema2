@@ -1,7 +1,10 @@
 node_modules
 .next
 .env
-prisma/dev.db
-prisma/dev.db-journal
+.env.*
+!.env.example
+.coverage
+coverage
+test-results
 .DS_Store
 npm-debug.log*

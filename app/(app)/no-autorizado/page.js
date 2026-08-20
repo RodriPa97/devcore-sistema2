@@ -4,7 +4,7 @@ export default function NoAutorizadoPage() {
   return (
     <main className="flex min-h-screen flex-col items-center justify-center gap-4 px-6 text-center">
       <span className="font-mono text-xs uppercase tracking-widest text-red-400">
-        // Acceso restringido
+         {"// Acceso restringido"}
       </span>
       <h1 className="font-disp text-2xl font-semibold">
         No tenés permiso para ver esta sección
