@@ -1,0 +1,51 @@
+name: Reset production database
+
+on:
+  workflow_dispatch:
+    inputs:
+      confirmation:
+        description: "Escribi RESET-PRODUCTION-ALL para borrar todos los datos"
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: production-database-reset
+  cancel-in-progress: false
+
+jobs:
+  reset:
+    if: ${{ inputs.confirmation == 'RESET-PRODUCTION-ALL' }}
+    runs-on: ubuntu-latest
+    environment:
+      name: production
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Configure Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20.19.0
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+        env:
+          DATABASE_URL: postgresql://devcore:devcore@localhost:5432/devcore?schema=public
+
+      - name: Reset and reapply production migrations
+        run: npx prisma migrate reset --force
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+
+      - name: Create initial administrator
+        run: npm run seed
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          ADMIN_EMAIL: ${{ secrets.ADMIN_EMAIL }}
+          ADMIN_PASSWORD: ${{ secrets.ADMIN_PASSWORD }}
