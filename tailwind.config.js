@@ -17,9 +17,9 @@ module.exports = {
         teal: "#17B8A6",
       },
       fontFamily: {
-        mono: ["'JetBrains Mono'", "ui-monospace", "monospace"],
-        disp: ["'Space Grotesk'", "sans-serif"],
-        body: ["'IBM Plex Sans'", "sans-serif"],
+        mono: ["var(--font-mono)", "ui-monospace", "monospace"],
+        disp: ["var(--font-display)", "sans-serif"],
+        body: ["var(--font-body)", "sans-serif"],
       },
     },
   },

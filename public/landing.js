@@ -1,102 +1,116 @@
-document.documentElement.classList.add('js');
-
-// Mobile navigation
-const nav = document.querySelector('.nav');
-const navToggle = document.querySelector('.nav-toggle');
-if(nav && navToggle){
-  const closeMenu = () => {
-    nav.classList.remove('menu-open');
-    navToggle.setAttribute('aria-expanded', 'false');
-    navToggle.setAttribute('aria-label', 'Abrir menú');
-  };
-
-  navToggle.addEventListener('click', () => {
-    const open = nav.classList.toggle('menu-open');
-    navToggle.setAttribute('aria-expanded', String(open));
-    navToggle.setAttribute('aria-label', open ? 'Cerrar menú' : 'Abrir menú');
-  });
-
-  nav.querySelectorAll('a').forEach(link => link.addEventListener('click', closeMenu));
-}
+document.documentElement.classList.add("js");
 
 // Terminal typing effect
-const lines = [
-  {t:"$ devcore init retail-negocio", cls:"prompt"},
-  {t:"> Analizando objetivo del negocio...", cls:""},
-  {t:"> Diseño UX/UI            [ok]", cls:"ok"},
-  {t:"> Backend & API           [ok]", cls:"ok"},
-  {t:"> Integración de pagos    [ok]", cls:"ok"},
-  {t:"> Deploy a producción     [ok]", cls:"ok"},
-  {t:"$ listo — negocio en producción", cls:"prompt"},
-];
-const termBody = document.getElementById('termBody');
-let li = 0, ci = 0;
-function typeNext(){
-  if(li >= lines.length){
-    // restart after pause
-    setTimeout(()=>{ termBody.innerHTML=''; li=0; ci=0; typeNext(); }, 2400);
-    return;
+const termBody = document.getElementById("termBody");
+if (termBody) {
+  const lines = [
+    { t: "$ devcore init retail-negocio", cls: "prompt" },
+    { t: "> Analizando objetivo del negocio...", cls: "" },
+    { t: "> Diseño UX/UI            [ok]", cls: "ok" },
+    { t: "> Backend & API           [ok]", cls: "ok" },
+    { t: "> Integración de pagos    [ok]", cls: "ok" },
+    { t: "> Deploy a producción     [ok]", cls: "ok" },
+    { t: "$ listo — negocio en producción", cls: "prompt" },
+  ];
+  const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
+  let lineIndex = 0;
+  let characterIndex = 0;
+  let timer;
+
+  function appendLine(line, text = "") {
+    const row = document.createElement("div");
+    const content = document.createElement("span");
+    const caret = document.createElement("span");
+    row.className = `term-line${line.cls ? ` ${line.cls}` : ""}`;
+    content.className = "caretline";
+    content.textContent = text;
+    caret.className = "term-caret";
+    row.append(content, caret);
+    termBody.appendChild(row);
   }
-  const line = lines[li];
-  if(ci === 0){
-    const div = document.createElement('div');
-    div.className = 'term-line' + (line.cls ? ' '+line.cls : '');
-    div.innerHTML = '<span class="caretline"></span><span class="term-caret"></span>';
-    termBody.appendChild(div);
+
+  function renderStatic() {
+    window.clearTimeout(timer);
+    termBody.replaceChildren();
+    lines.forEach((line) => {
+      appendLine(line, line.t);
+      termBody.lastElementChild?.querySelector(".term-caret")?.remove();
+    });
   }
-  const div = termBody.lastElementChild;
-  const caretSpan = div.querySelector('.term-caret');
-  ci++;
-  div.querySelector('.caretline').textContent = line.t.slice(0, ci);
-  if(ci >= line.t.length){
-    caretSpan.remove();
-    li++; ci = 0;
-    setTimeout(typeNext, 260);
-  } else {
-    setTimeout(typeNext, 18 + Math.random()*22);
+
+  function scheduleNext(delay) {
+    window.clearTimeout(timer);
+    if (!document.hidden && !reducedMotion.matches) {
+      timer = window.setTimeout(typeNext, delay);
+    }
   }
+
+  function typeNext() {
+    if (document.hidden || reducedMotion.matches) return;
+
+    if (lineIndex >= lines.length) {
+      timer = window.setTimeout(() => {
+        if (document.hidden || reducedMotion.matches) return;
+        termBody.replaceChildren();
+        lineIndex = 0;
+        characterIndex = 0;
+        typeNext();
+      }, 2400);
+      return;
+    }
+
+    const line = lines[lineIndex];
+    if (characterIndex === 0) appendLine(line);
+
+    const row = termBody.lastElementChild;
+    const content = row?.querySelector(".caretline");
+    if (!row || !content) return;
+
+    characterIndex += 1;
+    content.textContent = line.t.slice(0, characterIndex);
+
+    if (characterIndex >= line.t.length) {
+      row.querySelector(".term-caret")?.remove();
+      lineIndex += 1;
+      characterIndex = 0;
+      scheduleNext(260);
+    } else {
+      scheduleNext(18 + Math.random() * 22);
+    }
+  }
+
+  function handleVisibilityChange() {
+    window.clearTimeout(timer);
+    if (!document.hidden && !reducedMotion.matches) scheduleNext(0);
+  }
+
+  function handleMotionPreference() {
+    if (reducedMotion.matches) {
+      renderStatic();
+    } else {
+      termBody.replaceChildren();
+      lineIndex = 0;
+      characterIndex = 0;
+      scheduleNext(0);
+    }
+  }
+
+  document.addEventListener("visibilitychange", handleVisibilityChange);
+  reducedMotion.addEventListener("change", handleMotionPreference);
+  handleMotionPreference();
 }
-typeNext();
 
 // Reveal on scroll
-const io = new IntersectionObserver((entries)=>{
-  entries.forEach(e=>{ if(e.isIntersecting){ e.target.classList.add('in'); io.unobserve(e.target);} });
-},{threshold:0.12});
-document.querySelectorAll('.reveal').forEach(el=>io.observe(el));
-
-// FAQ accordion
-document.querySelectorAll('.faq-item').forEach(item=>{
-  const q = item.querySelector('.faq-q');
-  const a = item.querySelector('.faq-a');
-  const setState = (open) => {
-    q.setAttribute('aria-expanded', String(open));
-    a.setAttribute('aria-hidden', String(!open));
-    a.style.maxHeight = open ? a.scrollHeight + 'px' : null;
-  };
-
-  setState(item.classList.contains('open'));
-  q.addEventListener('click', ()=>{
-    const isOpen = item.classList.contains('open');
-    document.querySelectorAll('.faq-item.open').forEach(o=>{
-      o.classList.remove('open');
-      const openQuestion = o.querySelector('.faq-q');
-      const answer = o.querySelector('.faq-a');
-      openQuestion.setAttribute('aria-expanded', 'false');
-      answer.setAttribute('aria-hidden', 'true');
-      answer.style.maxHeight = null;
+if ("IntersectionObserver" in window) {
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach((entry) => {
+      if (entry.isIntersecting) {
+        entry.target.classList.add("in");
+        observer.unobserve(entry.target);
+      }
     });
-    if(!isOpen){
-      item.classList.add('open');
-      setState(true);
-    }
-  });
-});
-
-// NOTA: acá antes había un bloque que reescribía a mano el texto y el
-// href de los links "Iniciar sesión" / "Registrarse" del header,
-// apuntándolos a login.html / registro.html (como en el sitio estático
-// viejo). Ahora esos links ya son <Link> de Next.js con la ruta correcta
-// (/login y /registro) puestos directamente en app/(site)/page.js, así
-// que este script sobra — y de hecho estaba pisando esos links y
-// rompiéndolos (los mandaba a "login.html", que no existe en Next.js).
-// Se eliminó a propósito. No volver a agregar esta lógica acá.
+  }, { threshold: 0.12 });
+  document.querySelectorAll(".reveal").forEach((element) => observer.observe(element));
+} else {
+  document.querySelectorAll(".reveal").forEach((element) => element.classList.add("in"));
+}

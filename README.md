@@ -72,6 +72,38 @@ panel protegido para clientes y administradores.
 
    Abrir `http://localhost:3000`.
 
+### Arranque automatico
+
+Los scripts de `scripts/` automatizan el arranque local, incluyendo la
+verificacion de requisitos, PostgreSQL, dependencias, Prisma y migraciones.
+
+En PowerShell:
+
+```powershell
+.\scripts\start-dev.ps1
+```
+
+En Linux o macOS:
+
+```bash
+chmod +x scripts/start-dev.sh
+./scripts/start-dev.sh
+```
+
+Para crear o verificar el administrador inicial durante el arranque:
+
+```powershell
+.\scripts\start-dev.ps1 -Seed
+```
+
+```bash
+./scripts/start-dev.sh --seed
+```
+
+El seed es opcional para evitar modificar datos cada vez que se inicia el
+servidor. Los cambios futuros del esquema deben crear una migracion explicita
+con `npx prisma migrate dev --name descripcion_del_cambio`.
+
 ## Entornos
 
 - Desarrollo: PostgreSQL de Docker definido en `compose.yaml`.

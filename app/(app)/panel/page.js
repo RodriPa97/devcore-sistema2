@@ -16,16 +16,18 @@ export default async function PanelPage() {
   }
 
   return (
-    <main className="min-h-screen">
-      <header className="flex items-center justify-between border-b border-white/5 px-6 py-4">
-        <span className="font-mono text-xs text-muted">
+    <main className="min-h-dvh">
+      <header className="flex flex-col items-start gap-2 border-b border-white/5 px-4 py-4 sm:flex-row sm:items-center sm:justify-between sm:gap-4 sm:px-6">
+        <span className="min-w-0 max-w-full font-mono text-xs text-muted">
           Conectado como{" "}
-            <span className="text-ink">{user.name}</span>
+          <span className="break-words text-ink [overflow-wrap:anywhere]">
+            {user.name}
+          </span>
         </span>
         <SignOutButton />
       </header>
 
-      <div className="mx-auto max-w-3xl px-6 py-10">
+      <div className="mx-auto max-w-3xl px-4 py-8 sm:px-6 sm:py-10">
         <span className="font-mono text-xs uppercase tracking-widest text-teal">
           {"// Mis proyectos"}
         </span>
@@ -38,7 +40,7 @@ export default async function PanelPage() {
           preguntar.
         </p>
 
-        <div className="mt-8">
+        <div className="mt-6 sm:mt-8">
           <ProjectsBoard />
         </div>
       </div>

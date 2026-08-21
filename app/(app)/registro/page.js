@@ -24,16 +24,11 @@ export default function RegistroPage() {
         body: JSON.stringify({ name, email, password }),
       });
 
-      // Si el servidor se cayó o tiró un error que no devuelve JSON
-      // (por ejemplo la pantalla de error de Next.js), res.json() explota.
-      // Lo atajamos para no dejar el botón trabado en "Creando cuenta...".
       let data = {};
       try {
         data = await res.json();
       } catch {
-        setError(
-          "El servidor no respondió como se esperaba. Mirá la terminal donde corre 'npm run dev' por si hay un error en rojo."
-        );
+        setError("No pudimos procesar la respuesta. Probá de nuevo.");
         return;
       }
 
@@ -42,25 +37,27 @@ export default function RegistroPage() {
         return;
       }
 
-      // Cuenta creada: volvemos al inicio (donde está el logo y los
-      // botones de "Iniciar sesión" / "Crear cuenta"), no directo al login.
-      router.push("/login?registered=1");
-    } catch (err) {
-      setError("No se pudo conectar con el servidor. ¿Sigue corriendo 'npm run dev'?");
+      router.replace("/login?registered=1");
+    } catch {
+      setError("No se pudo conectar con el servidor. Probá de nuevo.");
     } finally {
       setLoading(false);
     }
   }
 
   return (
-    <main className="flex min-h-screen items-center justify-center px-6">
-      <div className="card w-full max-w-sm p-8">
+    <main className="flex min-h-dvh justify-center overflow-y-auto px-4 py-6 sm:px-6">
+      <div className="card my-auto w-full max-w-sm p-5 sm:p-8">
         <span className="font-mono text-xs uppercase tracking-widest text-teal">
            {"// Crear cuenta"}
         </span>
         <h1 className="font-disp mt-2 text-2xl font-semibold">Registro</h1>
 
-        <form onSubmit={handleSubmit} className="mt-6 flex flex-col gap-4">
+        <form
+          onSubmit={handleSubmit}
+          className="mt-6 flex flex-col gap-4"
+          aria-busy={loading}
+        >
           <div>
             <label htmlFor="register-name" className="mb-1 block text-xs text-muted">
               Nombre
@@ -72,7 +69,12 @@ export default function RegistroPage() {
               maxLength={120}
               autoComplete="name"
               value={name}
-              onChange={(e) => setName(e.target.value)}
+              onChange={(e) => {
+                setName(e.target.value);
+                if (error) setError("");
+              }}
+              aria-invalid={Boolean(error)}
+              aria-describedby={error ? "register-error" : undefined}
               className="input-field w-full rounded-md px-3 py-2 text-sm"
               placeholder="Tu nombre"
             />
@@ -87,7 +89,12 @@ export default function RegistroPage() {
               required
               autoComplete="email"
               value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              onChange={(e) => {
+                setEmail(e.target.value);
+                if (error) setError("");
+              }}
+              aria-invalid={Boolean(error)}
+              aria-describedby={error ? "register-error" : undefined}
               className="input-field w-full rounded-md px-3 py-2 text-sm"
               placeholder="tu@email.com"
             />
@@ -104,14 +111,19 @@ export default function RegistroPage() {
               maxLength={72}
               autoComplete="new-password"
               value={password}
-              onChange={(e) => setPassword(e.target.value)}
+              onChange={(e) => {
+                setPassword(e.target.value);
+                if (error) setError("");
+              }}
+              aria-invalid={Boolean(error)}
+              aria-describedby={error ? "register-error" : undefined}
               className="input-field w-full rounded-md px-3 py-2 text-sm"
               placeholder="Mínimo 8 caracteres"
             />
           </div>
 
           {error && (
-            <p className="text-sm text-red-400" role="alert">
+            <p id="register-error" className="text-sm text-red-400" role="alert">
               {error}
             </p>
           )}
@@ -119,6 +131,7 @@ export default function RegistroPage() {
           <button
             type="submit"
             disabled={loading}
+            aria-live="polite"
             className="btn-primary mt-2 rounded-lg px-4 py-3 font-mono text-sm font-medium disabled:opacity-60"
           >
             {loading ? "Creando cuenta..." : "Crear cuenta"}

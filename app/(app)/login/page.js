@@ -49,8 +49,7 @@ function LoginForm() {
         destino = session?.user?.role === "ADMIN" ? "/admin" : "/panel";
       }
 
-      router.push(safeCallbackUrl(destino, "/panel"));
-      router.refresh();
+      router.replace(safeCallbackUrl(destino, "/panel"));
     } catch {
       setError("No se pudo conectar con el servidor. Probá de nuevo.");
     } finally {
@@ -59,8 +58,8 @@ function LoginForm() {
   }
 
   return (
-    <main className="flex min-h-screen items-center justify-center px-6">
-      <div className="card w-full max-w-sm p-8">
+    <main className="flex min-h-dvh justify-center overflow-y-auto px-4 py-6 sm:px-6">
+      <div className="card my-auto w-full max-w-sm p-5 sm:p-8">
         <span className="font-mono text-xs uppercase tracking-widest text-teal">
            {"// Acceso"}
         </span>
@@ -68,7 +67,11 @@ function LoginForm() {
           Iniciar sesión
         </h1>
 
-        <form onSubmit={handleSubmit} className="mt-6 flex flex-col gap-4">
+        <form
+          onSubmit={handleSubmit}
+          className="mt-6 flex flex-col gap-4"
+          aria-busy={loading}
+        >
           <div>
             <label htmlFor="login-email" className="mb-1 block text-xs text-muted">
               Email
@@ -79,7 +82,12 @@ function LoginForm() {
               required
               autoComplete="email"
               value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              onChange={(e) => {
+                setEmail(e.target.value);
+                if (error) setError("");
+              }}
+              aria-invalid={Boolean(error)}
+              aria-describedby={error ? "login-error" : undefined}
               className="input-field w-full rounded-md px-3 py-2 text-sm"
               placeholder="tu@email.com"
             />
@@ -94,7 +102,12 @@ function LoginForm() {
               required
               autoComplete="current-password"
               value={password}
-              onChange={(e) => setPassword(e.target.value)}
+              onChange={(e) => {
+                setPassword(e.target.value);
+                if (error) setError("");
+              }}
+              aria-invalid={Boolean(error)}
+              aria-describedby={error ? "login-error" : undefined}
               className="input-field w-full rounded-md px-3 py-2 text-sm"
               placeholder="••••••••"
             />
@@ -107,7 +120,7 @@ function LoginForm() {
           )}
 
           {error && (
-            <p className="text-sm text-red-400" role="alert">
+            <p id="login-error" className="text-sm text-red-400" role="alert">
               {error}
             </p>
           )}
@@ -115,6 +128,7 @@ function LoginForm() {
           <button
             type="submit"
             disabled={loading}
+            aria-live="polite"
             className="btn-primary mt-2 rounded-lg px-4 py-3 font-mono text-sm font-medium disabled:opacity-60"
           >
             {loading ? "Ingresando..." : "Ingresar"}
@@ -136,8 +150,10 @@ export default function LoginPage() {
   return (
     <Suspense
       fallback={
-        <main className="flex min-h-screen items-center justify-center px-6">
-          <p className="text-sm text-muted">Cargando acceso...</p>
+        <main className="flex min-h-dvh items-center justify-center px-4 py-6 sm:px-6">
+          <p className="text-sm text-muted" role="status" aria-live="polite">
+            Cargando acceso...
+          </p>
         </main>
       }
     >

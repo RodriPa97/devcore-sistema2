@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { ESTADOS_PROYECTO } from "@/lib/estadosProyecto";
 import { crearProyecto, actualizarProyecto, eliminarProyecto } from "../actions";
@@ -5,36 +6,252 @@ import {
   ConfirmSubmitButton,
   FormSubmitButton,
 } from "@/components/FormSubmitButton";
+import { AdminPagination } from "@/components/admin/Pagination";
+
+const PROJECT_ERRORS = {
+  "invalid-project": "Revisá el nombre, el cliente y el estado del proyecto.",
+  "invalid-client": "Elegí un cliente activo válido.",
+  "invalid-update": "Revisá el estado, el avance y las notas antes de guardar.",
+  "invalid-delete": "No se pudo identificar el proyecto que querés eliminar.",
+  "project-not-found": "El proyecto ya no existe. La lista fue actualizada.",
+  "stale-project": "El proyecto cambió en otra sesión. Revisá los datos actualizados e intentá nuevamente.",
+};
+const PAGE_SIZE = 20;
+
+function singleParam(value) {
+  return typeof value === "string" ? value : undefined;
+}
+
+function getFeedback(params) {
+  const error = PROJECT_ERRORS[singleParam(params?.error)];
+  if (error) return { type: "error", message: error };
+
+  const success = singleParam(params?.success);
+  const subject = singleParam(params?.subject)?.slice(0, 160);
+  const project = subject ? `“${subject}”` : "El proyecto";
+
+  if (success === "project-created") {
+    return { type: "success", message: `${project} fue creado.` };
+  }
+  if (success === "project-updated") {
+    return { type: "success", message: `${project} fue actualizado.` };
+  }
+  if (success === "project-deleted") {
+    return { type: "success", message: `${project} fue eliminado.` };
+  }
+
+  return null;
+}
+
+function ClientDetails({ client }) {
+  return (
+    <div className="min-w-0">
+      <p className="break-words text-sm text-muted">{client.name}</p>
+      <p className="mt-0.5 break-all text-xs text-muted-2">{client.email}</p>
+    </div>
+  );
+}
+
+function ProjectEditor({ project, view }) {
+  const prefix = `${view}-project-${project.id}`;
+
+  return (
+    <form action={actualizarProyecto} className="min-w-0">
+      <input type="hidden" name="id" value={project.id} />
+      <input type="hidden" name="updatedAt" value={project.updatedAt.toISOString()} />
+      <div
+        className={
+          view === "desktop"
+            ? "grid min-w-[470px] grid-cols-[minmax(8rem,0.8fr)_5.5rem_minmax(12rem,1.4fr)] gap-3"
+            : "grid grid-cols-1 gap-4"
+        }
+      >
+        <label htmlFor={`${prefix}-status`} className="flex flex-col gap-2 text-xs text-muted">
+          <span>Estado</span>
+          <select
+            id={`${prefix}-status`}
+            name="status"
+            defaultValue={project.status}
+            className="input-field min-h-11 rounded-md px-3 py-2 text-sm text-ink"
+          >
+            {ESTADOS_PROYECTO.map((status) => (
+              <option key={status.value} value={status.value}>
+                {status.label}
+              </option>
+            ))}
+          </select>
+        </label>
+        <label htmlFor={`${prefix}-progress`} className="flex flex-col gap-2 text-xs text-muted">
+          <span>Avance %</span>
+          <input
+            id={`${prefix}-progress`}
+            type="number"
+            name="progress"
+            min={0}
+            max={100}
+            defaultValue={project.progress}
+            className="input-field min-h-11 rounded-md px-3 py-2 text-sm text-ink"
+          />
+        </label>
+        <label htmlFor={`${prefix}-notes`} className="flex flex-col gap-2 text-xs text-muted">
+          <span>Notas para el cliente</span>
+          <textarea
+            id={`${prefix}-notes`}
+            name="notes"
+            rows={view === "desktop" ? 1 : 3}
+            maxLength={2000}
+            defaultValue={project.notes || ""}
+            placeholder="Opcional"
+            className="input-field min-h-11 resize-y rounded-md px-3 py-2 text-sm text-ink"
+          />
+        </label>
+      </div>
+      <FormSubmitButton
+        pendingLabel="Guardando..."
+        className={`mt-3 min-h-11 rounded-lg px-4 py-2 font-mono text-xs text-teal hover:bg-teal/10 ${
+          view === "mobile" ? "w-full" : ""
+        }`}
+      >
+        Guardar cambios
+      </FormSubmitButton>
+    </form>
+  );
+}
+
+function DeleteProject({ project, fullWidth = false }) {
+  return (
+    <form action={eliminarProyecto}>
+      <input type="hidden" name="id" value={project.id} />
+      <ConfirmSubmitButton
+        message={`¿Eliminar el proyecto "${project.name}"? Esta acción no se puede deshacer.`}
+        className={`min-h-11 rounded-lg px-3 py-2 font-mono text-xs text-red-400 hover:bg-red-400/10 ${
+          fullWidth ? "w-full" : ""
+        }`}
+      >
+        Eliminar proyecto
+      </ConfirmSubmitButton>
+    </form>
+  );
+}
+
+function ProjectsList({ projects, hasClients, page, totalPages }) {
+  if (projects.length === 0) {
+    return (
+      <div className="px-5 py-10 text-center">
+        <p className="font-disp text-lg font-semibold">Todavía no hay proyectos</p>
+        <p className="mx-auto mt-2 max-w-md text-sm text-muted">
+          {hasClients
+            ? "Completá el formulario de arriba para crear el primero y asignarlo a un cliente."
+            : "Primero necesitás al menos un cliente activo para poder crear un proyecto."}
+        </p>
+      </div>
+    );
+  }
+
+  return (
+    <>
+      <div className="hidden overflow-x-auto lg:block">
+        <table className="w-full min-w-[980px] text-left text-sm">
+          <thead className="border-b border-white/10 bg-white/[0.02]">
+            <tr className="font-mono text-[11px] uppercase tracking-wide text-muted-2">
+              <th scope="col" className="px-5 py-3">Proyecto</th>
+              <th scope="col" className="px-5 py-3">Cliente</th>
+              <th scope="col" className="px-5 py-3">Actualizar</th>
+              <th scope="col" className="px-5 py-3">Acciones</th>
+            </tr>
+          </thead>
+          <tbody>
+            {projects.map((project) => (
+              <tr key={project.id} className="border-b border-white/5 last:border-0">
+                <th scope="row" className="max-w-52 break-words px-5 py-4 align-top font-medium">
+                  {project.name}
+                </th>
+                <td className="max-w-52 px-5 py-4 align-top">
+                  <ClientDetails client={project.client} />
+                </td>
+                <td className="px-5 py-4 align-top">
+                  <ProjectEditor project={project} view="desktop" />
+                </td>
+                <td className="px-5 py-4 align-top">
+                  <DeleteProject project={project} />
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
+      <div className="divide-y divide-white/5 lg:hidden">
+        {projects.map((project) => (
+          <article key={project.id} className="p-4 sm:p-5">
+            <h3 className="break-words font-disp text-lg font-semibold">
+              {project.name}
+            </h3>
+            <div className="mt-2 border-b border-white/5 pb-4">
+              <span className="font-mono text-[10px] uppercase tracking-wide text-muted-2">
+                Cliente
+              </span>
+              <ClientDetails client={project.client} />
+            </div>
+            <div className="mt-4">
+              <ProjectEditor project={project} view="mobile" />
+            </div>
+            <div className="mt-3 border-t border-white/5 pt-3">
+              <DeleteProject project={project} fullWidth />
+            </div>
+          </article>
+        ))}
+      </div>
+      <AdminPagination
+        pathname="/admin/proyectos"
+        page={page}
+        totalPages={totalPages}
+        paramName="projectPage"
+        label="proyectos"
+      />
+    </>
+  );
+}
+
+function parsePage(value) {
+  const parsed = Number(value);
+  return Number.isInteger(parsed) && parsed > 0 ? parsed : 1;
+}
 
 export const dynamic = "force-dynamic";
 
 export default async function ProyectosAdminPage({ searchParams }) {
   const params = await searchParams;
-  const [proyectos, clientes] = await Promise.all([
-    prisma.project.findMany({
-      select: {
-        id: true,
-        name: true,
-        status: true,
-        progress: true,
-        notes: true,
-        updatedAt: true,
-        client: { select: { id: true, name: true, email: true } },
-      },
-      orderBy: { createdAt: "desc" },
-    }),
+  const requestedPage = parsePage(params?.projectPage);
+  const [projectCount, clientes] = await Promise.all([
+    prisma.project.count(),
     prisma.user.findMany({
-      where: { role: "CLIENTE" },
+      where: { role: "CLIENTE", active: true },
       orderBy: { name: "asc" },
       select: { id: true, name: true, email: true },
     }),
   ]);
+  const totalPages = Math.max(1, Math.ceil(projectCount / PAGE_SIZE));
+  const page = Math.min(requestedPage, totalPages);
+  const proyectos = await prisma.project.findMany({
+    skip: (page - 1) * PAGE_SIZE,
+    take: PAGE_SIZE,
+    select: {
+      id: true,
+      name: true,
+      status: true,
+      progress: true,
+      notes: true,
+      updatedAt: true,
+      client: { select: { id: true, name: true, email: true } },
+    },
+    orderBy: { createdAt: "desc" },
+  });
 
-  const error = params?.error;
-  const ok = params?.ok;
+  const feedback = getFeedback(params);
 
   return (
-    <div className="flex flex-col gap-8">
+    <div className="flex min-w-0 flex-col gap-8">
       <div>
         <span className="font-mono text-xs uppercase tracking-widest text-teal">
           {"// Proyectos"}
@@ -43,197 +260,108 @@ export default async function ProyectosAdminPage({ searchParams }) {
           Proyectos de clientes
         </h1>
         <p className="mt-2 max-w-xl text-sm text-muted">
-          Cada proyecto que crees acá lo ve el cliente correspondiente en su
-          panel (<code>/panel</code>), actualizado automáticamente — no hace
-          falta avisarle por otro lado cuando cambia el estado.
+          Los cambios de estado, avance y notas quedan disponibles para el
+          cliente en su panel.
         </p>
       </div>
 
-      {error && (
-        <div className="rounded-lg border border-red-400/30 bg-red-400/10 px-4 py-3 text-sm text-red-300">
-          {error}
+      {feedback ? (
+        <div
+          role={feedback.type === "error" ? "alert" : "status"}
+          className={`rounded-lg border px-4 py-3 text-sm ${
+            feedback.type === "error"
+              ? "border-red-400/30 bg-red-400/10 text-red-300"
+              : "border-lime/30 bg-lime/10 text-lime"
+          }`}
+        >
+          {feedback.message}
         </div>
-      )}
-      {ok && (
-        <div className="rounded-lg border border-lime/30 bg-lime/10 px-4 py-3 text-sm text-lime">
-          Proyecto creado con éxito.
-        </div>
-      )}
+      ) : null}
 
-      <div className="card p-6">
-        <h2 className="font-disp text-lg font-semibold">Crear proyecto</h2>
+      <section className="card p-4 sm:p-6" aria-labelledby="create-project-title">
+        <h2 id="create-project-title" className="font-disp text-lg font-semibold">
+          Crear proyecto
+        </h2>
 
         {clientes.length === 0 ? (
-          <p className="mt-2 text-sm text-muted">
-            Todavía no hay ningún cliente registrado. Un proyecto siempre
-            tiene que estar asignado a un cliente — pedile que se registre
-            en <code>/registro</code>, o creá vos la cuenta desde{" "}
-            <code>/admin/usuarios</code> (ahí también podés crear clientes a
-            mano si agregamos esa opción más adelante).
-          </p>
+          <div className="mt-3 rounded-lg border border-white/10 bg-white/[0.02] p-4">
+            <p className="text-sm text-muted">
+              No hay clientes activos. Cuando exista una cuenta cliente activa,
+              vas a poder asignarle un proyecto desde acá.
+            </p>
+            <Link
+              href="/admin/usuarios"
+              className="mt-3 inline-flex min-h-11 items-center rounded-lg px-3 py-2 font-mono text-xs text-teal hover:bg-teal/10"
+            >
+              Revisar usuarios
+            </Link>
+          </div>
         ) : (
           <form
             action={crearProyecto}
-            className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-4"
+            className="mt-5 grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4"
           >
-            <label htmlFor="project-name" className="sr-only">
-              Nombre del proyecto
+            <label htmlFor="project-name" className="flex flex-col gap-2 text-sm text-muted sm:col-span-2">
+              <span>Nombre del proyecto</span>
+              <input
+                id="project-name"
+                type="text"
+                name="name"
+                required
+                maxLength={160}
+                className="input-field min-h-11 rounded-md px-3 py-2 text-sm text-ink"
+              />
             </label>
-            <input
-              id="project-name"
-              type="text"
-              name="name"
-              required
-              maxLength={160}
-              placeholder="Nombre del proyecto"
-              className="input-field rounded-md px-3 py-2 text-sm sm:col-span-2"
-            />
-            <label htmlFor="project-client" className="sr-only">
-              Cliente
+            <label htmlFor="project-client" className="flex flex-col gap-2 text-sm text-muted">
+              <span>Cliente</span>
+              <select
+                id="project-client"
+                name="clientId"
+                required
+                defaultValue=""
+                className="input-field min-h-11 rounded-md px-3 py-2 text-sm text-ink"
+              >
+                <option value="" disabled>Elegir cliente</option>
+                {clientes.map((client) => (
+                  <option key={client.id} value={client.id}>
+                    {client.name} ({client.email})
+                  </option>
+                ))}
+              </select>
             </label>
-            <select
-              id="project-client"
-              name="clientId"
-              required
-              defaultValue=""
-              className="input-field rounded-md px-3 py-2 text-sm"
-            >
-              <option value="" disabled>
-                Elegir cliente
-              </option>
-              {clientes.map((c) => (
-                <option key={c.id} value={c.id}>
-                  {c.name} ({c.email})
-                </option>
-              ))}
-            </select>
-            <label htmlFor="project-status" className="sr-only">
-              Estado inicial
+            <label htmlFor="project-status" className="flex flex-col gap-2 text-sm text-muted">
+              <span>Estado inicial</span>
+              <select
+                id="project-status"
+                name="status"
+                defaultValue="BACKLOG"
+                className="input-field min-h-11 rounded-md px-3 py-2 text-sm text-ink"
+              >
+                {ESTADOS_PROYECTO.map((status) => (
+                  <option key={status.value} value={status.value}>
+                    {status.label}
+                  </option>
+                ))}
+              </select>
             </label>
-            <select
-              id="project-status"
-              name="status"
-              defaultValue="BACKLOG"
-              className="input-field rounded-md px-3 py-2 text-sm"
-            >
-              {ESTADOS_PROYECTO.map((e) => (
-                <option key={e.value} value={e.value}>
-                  {e.label}
-                </option>
-              ))}
-            </select>
             <FormSubmitButton
               pendingLabel="Creando..."
-              className="btn-primary rounded-lg px-4 py-2 font-mono text-sm font-medium sm:col-span-4 sm:w-fit"
+              className="btn-primary min-h-11 rounded-lg px-4 py-2 font-mono text-sm font-medium sm:col-span-2 sm:w-fit xl:col-span-4"
             >
               Crear proyecto
             </FormSubmitButton>
           </form>
         )}
-      </div>
+      </section>
 
-      <div className="card overflow-hidden">
-        {proyectos.length === 0 ? (
-          <p className="px-5 py-6 text-sm text-muted">
-            Todavía no creaste ningún proyecto.
-          </p>
-        ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full min-w-[980px] text-left text-sm">
-            <thead className="border-b border-white/10 bg-white/[0.02]">
-              <tr className="font-mono text-[11px] uppercase tracking-wide text-muted-2">
-                <th className="px-5 py-3">Proyecto</th>
-                <th className="px-5 py-3">Cliente</th>
-                <th className="px-5 py-3">Estado</th>
-                <th className="px-5 py-3">Avance</th>
-                <th className="px-5 py-3">Notas</th>
-                <th className="px-5 py-3"></th>
-              </tr>
-            </thead>
-            <tbody>
-              {proyectos.map((p) => (
-                <tr key={p.id} className="border-b border-white/5 last:border-0">
-                  <td className="px-5 py-3 align-top">{p.name}</td>
-                  <td className="px-5 py-3 align-top text-muted">
-                    {p.client.name}
-                    <br />
-                    <span className="text-xs text-muted-2">
-                      {p.client.email}
-                    </span>
-                  </td>
-                  <td className="px-5 py-3 align-top">
-                    <form
-                      action={actualizarProyecto}
-                      className="flex flex-col gap-2"
-                      >
-                      <input type="hidden" name="id" value={p.id} />
-                      <input
-                        type="hidden"
-                        name="updatedAt"
-                        value={p.updatedAt.toISOString()}
-                      />
-                      <select
-                        id={`project-${p.id}-status`}
-                        name="status"
-                        aria-label={`Estado de ${p.name}`}
-                        defaultValue={p.status}
-                        className="input-field rounded-md px-2 py-1 text-xs"
-                      >
-                        {ESTADOS_PROYECTO.map((e) => (
-                          <option key={e.value} value={e.value}>
-                            {e.label}
-                          </option>
-                        ))}
-                      </select>
-                      <input
-                        id={`project-${p.id}-progress`}
-                        type="number"
-                        name="progress"
-                        aria-label={`Avance de ${p.name}`}
-                        min={0}
-                        max={100}
-                        defaultValue={p.progress}
-                        className="input-field w-20 rounded-md px-2 py-1 text-xs"
-                      />
-                      <input
-                        id={`project-${p.id}-notes`}
-                        type="text"
-                        name="notes"
-                        aria-label={`Notas de ${p.name}`}
-                        defaultValue={p.notes || ""}
-                        placeholder="Nota para el cliente (opcional)"
-                        className="input-field rounded-md px-2 py-1 text-xs"
-                      />
-                      <FormSubmitButton
-                        pendingLabel="Guardando..."
-                        className="w-fit font-mono text-[11px] text-teal hover:underline"
-                      >
-                        Guardar cambios
-                      </FormSubmitButton>
-                    </form>
-                  </td>
-                  <td className="px-5 py-3 align-top">{p.progress}%</td>
-                  <td className="px-5 py-3 align-top text-xs text-muted">
-                    {p.notes || "—"}
-                  </td>
-                  <td className="px-5 py-3 align-top">
-                    <form action={eliminarProyecto}>
-                      <input type="hidden" name="id" value={p.id} />
-                      <ConfirmSubmitButton
-                        message={`¿Eliminar el proyecto "${p.name}"? Esta acción no se puede deshacer.`}
-                        className="font-mono text-[11px] text-red-400 hover:underline"
-                      >
-                        Eliminar
-                      </ConfirmSubmitButton>
-                    </form>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-            </table>
-          </div>
-        )}
-      </div>
+      <section className="card overflow-hidden" aria-label="Listado de proyectos">
+        <ProjectsList
+          projects={proyectos}
+          hasClients={clientes.length > 0}
+          page={page}
+          totalPages={totalPages}
+        />
+      </section>
     </div>
   );
 }

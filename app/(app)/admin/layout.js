@@ -1,7 +1,7 @@
-import Link from "next/link";
 import { redirect } from "next/navigation";
 import { requireAdmin, UnauthorizedError } from "@/lib/authz";
 import { SignOutButton } from "@/components/SignOutButton";
+import { AdminNav } from "@/components/admin/AdminNav";
 
 // El proxy (proxy.js) ya bloquea /admin/* a nivel de red, pero
 // repetimos el chequeo acá adentro (defensa en profundidad): si por
@@ -17,41 +17,26 @@ export default async function AdminLayout({ children }) {
   }
 
   return (
-    <div className="flex min-h-screen">
-      <aside className="card m-4 flex w-auto shrink-0 flex-row gap-1 overflow-x-auto rounded-2xl p-3 sm:w-56 sm:flex-col sm:p-4">
-        <span className="mb-4 font-mono text-[11px] uppercase tracking-widest text-muted-2">
+    <div className="flex min-h-screen flex-col lg:flex-row">
+      <aside className="card m-3 shrink-0 overflow-x-auto rounded-2xl p-3 sm:m-4 lg:sticky lg:top-4 lg:h-[calc(100vh-2rem)] lg:w-56 lg:overflow-x-visible lg:p-4">
+        <span className="mb-2 block whitespace-nowrap px-3 font-mono text-[11px] uppercase tracking-widest text-muted-2 lg:mb-4">
           devcore / admin
         </span>
-        <Link
-          href="/admin"
-          className="rounded-lg px-3 py-2 text-sm text-muted hover:bg-white/5 hover:text-ink"
-        >
-          Panel
-        </Link>
-        <Link
-          href="/admin/usuarios"
-          className="rounded-lg px-3 py-2 text-sm text-muted hover:bg-white/5 hover:text-ink"
-        >
-          Usuarios
-        </Link>
-        <Link
-          href="/admin/proyectos"
-          className="rounded-lg px-3 py-2 text-sm text-muted hover:bg-white/5 hover:text-ink"
-        >
-          Proyectos
-        </Link>
+        <AdminNav />
       </aside>
 
-      <div className="flex-1">
-        <header className="flex items-center justify-between border-b border-white/5 px-6 py-4">
-          <span className="font-mono text-xs text-muted">
+      <div className="min-w-0 flex-1">
+        <header className="flex min-w-0 flex-wrap items-center gap-3 border-b border-white/5 px-4 py-4 sm:px-6">
+          <span className="min-w-0 flex-1 break-words font-mono text-xs leading-5 text-muted">
             Conectado como{" "}
-            <span className="text-ink">{user.name}</span>{" "}
+            <span className="text-ink [overflow-wrap:anywhere]">{user.name}</span>{" "}
             <span className="text-teal">({user.role})</span>
           </span>
-          <SignOutButton />
+          <div className="shrink-0 [&_button]:min-h-11 [&_button]:px-2">
+            <SignOutButton />
+          </div>
         </header>
-        <main className="p-6">{children}</main>
+        <main className="min-w-0 p-4 sm:p-6">{children}</main>
       </div>
     </div>
   );

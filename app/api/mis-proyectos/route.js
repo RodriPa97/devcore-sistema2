@@ -25,8 +25,6 @@ export async function GET() {
         status: true,
         progress: true,
         notes: true,
-        createdAt: true,
-        updatedAt: true,
       },
     });
 

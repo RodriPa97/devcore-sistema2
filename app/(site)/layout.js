@@ -1,4 +1,5 @@
 import "./landing.css";
+import { fontBody, fontDisplay, fontMono } from "@/lib/fonts";
 
 // Layout raíz para la landing. Su CSS sigue aislado del sistema de gestión.
 export const metadata = {
@@ -10,7 +11,10 @@ export const metadata = {
 
 export default function SiteLayout({ children }) {
   return (
-    <html lang="es-AR">
+    <html
+      lang="es-AR"
+      className={`${fontBody.variable} ${fontDisplay.variable} ${fontMono.variable}`}
+    >
       <body>{children}</body>
     </html>
   );

@@ -1,6 +1,8 @@
 import Link from "next/link";
 import Image from "next/image";
 import Script from "next/script";
+import Faq from "../../components/site/Faq";
+import SiteHeader from "../../components/site/SiteHeader";
 
 // Esta es la landing de DevCore (la página institucional de la empresa),
 // convertida del index.html original a JSX. Vive en el grupo de rutas
@@ -11,172 +13,10 @@ import Script from "next/script";
 export default function LandingPage() {
   return (
     <>
-      <header className="site">
-        <a href="#seguimiento" className="nav-banner">
-          Ahora podés seguir el progreso de tu proyecto en tiempo real desde
-          tu panel de cliente <span className="chev">›</span>
-        </a>
-        <nav className="nav">
-          <a href="#" className="nav-logo">
-            <Image src="/logo-horizontal.webp" alt="DevCore" width={250} height={46} priority />
-          </a>
-          <div id="site-nav-links" className="nav-links">
-            <div className="nav-item">
-              <a href="#servicios" className="nav-link">
-                Servicios <span className="nav-caret">▾</span>
-              </a>
-              <div className="nav-dropdown">
-                <div className="nav-dd-col">
-                  <span className="nav-dd-heading">Qué hacemos</span>
-                  <a href="#servicios" className="nav-dd-item">
-                    <span className="nav-dd-title">Analizar</span>
-                    <span className="nav-dd-desc">
-                      Relevamos procesos y necesidades
-                    </span>
-                  </a>
-                  <a href="#servicios" className="nav-dd-item">
-                    <span className="nav-dd-title">Diseñar</span>
-                    <span className="nav-dd-desc">
-                      Pantallas y flujo de trabajo
-                    </span>
-                  </a>
-                  <a href="#servicios" className="nav-dd-item">
-                    <span className="nav-dd-title">Desarrollar</span>
-                    <span className="nav-dd-desc">
-                      Sistemas y paneles a medida
-                    </span>
-                  </a>
-                </div>
-                <div className="nav-dd-col">
-                  <span className="nav-dd-heading">Cómo lo hacemos</span>
-                  <a href="#servicios" className="nav-dd-item">
-                    <span className="nav-dd-title">Integrar</span>
-                    <span className="nav-dd-desc">
-                      Pagos, APIs y servicios externos
-                    </span>
-                  </a>
-                  <a href="#servicios" className="nav-dd-item">
-                    <span className="nav-dd-title">Publicar</span>
-                    <span className="nav-dd-desc">
-                      Puesta en marcha en internet
-                    </span>
-                  </a>
-                  <a href="#servicios" className="nav-dd-item">
-                    <span className="nav-dd-title">Mantener</span>
-                    <span className="nav-dd-desc">
-                      Mejoras y soporte continuo
-                    </span>
-                  </a>
-                </div>
-              </div>
-            </div>
+      <a className="skip-link" href="#main-content">Saltar al contenido principal</a>
+      <SiteHeader />
 
-            <div className="nav-item">
-              <a href="#industrias" className="nav-link">
-                Soluciones <span className="nav-caret">▾</span>
-              </a>
-              <div className="nav-dropdown">
-                <div className="nav-dd-col">
-                  <span className="nav-dd-heading">Para tu negocio</span>
-                  <a href="#industrias" className="nav-dd-item">
-                    <span className="nav-dd-title">Sistemas de gestión</span>
-                    <span className="nav-dd-desc">
-                      Panel, usuarios y reportes
-                    </span>
-                  </a>
-                  <a href="#industrias" className="nav-dd-item">
-                    <span className="nav-dd-title">Stock y ventas</span>
-                    <span className="nav-dd-desc">
-                      Productos, movimientos y ventas
-                    </span>
-                  </a>
-                  <a href="#industrias" className="nav-dd-item">
-                    <span className="nav-dd-title">Farmacias</span>
-                    <span className="nav-dd-desc">Gestión y administración</span>
-                  </a>
-                </div>
-                <div className="nav-dd-col">
-                  <span className="nav-dd-heading">Más soluciones</span>
-                  <a href="#industrias" className="nav-dd-item">
-                    <span className="nav-dd-title">Comercios y gastronomía</span>
-                    <span className="nav-dd-desc">
-                      Pedidos, ventas y paneles
-                    </span>
-                  </a>
-                  <a href="#industrias" className="nav-dd-item">
-                    <span className="nav-dd-title">Sitios web</span>
-                    <span className="nav-dd-desc">
-                      Landing pages institucionales
-                    </span>
-                  </a>
-                  <a href="#industrias" className="nav-dd-item">
-                    <span className="nav-dd-title">Integraciones</span>
-                    <span className="nav-dd-desc">
-                      Pagos, APIs y automatización
-                    </span>
-                  </a>
-                </div>
-              </div>
-            </div>
-
-            <div className="nav-item">
-              <a href="#planes" className="nav-link">
-                Recursos <span className="nav-caret">▾</span>
-              </a>
-              <div className="nav-dropdown">
-                <div className="nav-dd-col">
-                  <span className="nav-dd-heading">Empresa</span>
-                  <a href="#planes" className="nav-dd-item">
-                    <span className="nav-dd-title">Cómo trabajamos</span>
-                    <span className="nav-dd-desc">
-                      Nuestro proceso paso a paso
-                    </span>
-                  </a>
-                  <a href="#seguimiento" className="nav-dd-item">
-                    <span className="nav-dd-title">Seguimiento de proyectos</span>
-                    <span className="nav-dd-desc">
-                      Transparencia en cada etapa
-                    </span>
-                  </a>
-                </div>
-                <div className="nav-dd-col">
-                  <span className="nav-dd-heading">Ayuda</span>
-                  <a href="#faq" className="nav-dd-item">
-                    <span className="nav-dd-title">Preguntas frecuentes</span>
-                    <span className="nav-dd-desc">Resolvemos tus dudas</span>
-                  </a>
-                  <a
-                    href="mailto:devcore97@gmail.com"
-                    className="nav-dd-item"
-                  >
-                    <span className="nav-dd-title">Contacto</span>
-                    <span className="nav-dd-desc">Escribinos directamente</span>
-                  </a>
-                </div>
-              </div>
-            </div>
-          </div>
-          <div className="nav-cta">
-            <Link href="/login" className="btn btn-primary">
-              Iniciar sesión
-            </Link>
-            <Link href="/registro" className="btn btn-ghost">
-              Registrarse
-            </Link>
-          </div>
-          <button
-            type="button"
-            className="nav-toggle"
-            aria-label="Abrir menú"
-            aria-expanded="false"
-            aria-controls="site-nav-links"
-          >
-            ☰
-          </button>
-        </nav>
-      </header>
-
-      <main>
+      <main id="main-content">
         {/* HERO */}
         <section className="hero">
           <div className="wrap hero-grid">
@@ -222,6 +62,8 @@ export default function LandingPage() {
                 className="cube-float"
                 viewBox="0 0 100 100"
                 xmlns="http://www.w3.org/2000/svg"
+                aria-hidden="true"
+                focusable="false"
               >
                 <defs>
                   <linearGradient id="cubeGrad" x1="0" y1="0" x2="1" y2="1">
@@ -245,7 +87,7 @@ export default function LandingPage() {
                   opacity="0.8"
                 />
               </svg>
-              <div className="term">
+              <div className="term" aria-hidden="true">
                 <div className="term-bar">
                   <div className="term-dot"></div>
                   <div className="term-dot"></div>
@@ -292,7 +134,7 @@ export default function LandingPage() {
             </div>
             <div className="pillars reveal">
               <div className="pillar">
-                <span className="pillar-num">01</span>
+                <span className="pillar-num" aria-hidden="true">01</span>
                 <h3>Analizar</h3>
                 <p>
                   Relevamos procesos, necesidades y tareas repetitivas para
@@ -300,7 +142,7 @@ export default function LandingPage() {
                 </p>
               </div>
               <div className="pillar">
-                <span className="pillar-num">02</span>
+                <span className="pillar-num" aria-hidden="true">02</span>
                 <h3>Diseñar</h3>
                 <p>
                   Definimos pantallas, módulos y flujo de trabajo antes de
@@ -308,7 +150,7 @@ export default function LandingPage() {
                 </p>
               </div>
               <div className="pillar">
-                <span className="pillar-num">03</span>
+                <span className="pillar-num" aria-hidden="true">03</span>
                 <h3>Desarrollar</h3>
                 <p>
                   Construimos sistemas web, paneles administrativos y
@@ -316,7 +158,7 @@ export default function LandingPage() {
                 </p>
               </div>
               <div className="pillar">
-                <span className="pillar-num">04</span>
+                <span className="pillar-num" aria-hidden="true">04</span>
                 <h3>Integrar</h3>
                 <p>
                   Conectamos pagos, formularios, bases de datos y servicios
@@ -324,7 +166,7 @@ export default function LandingPage() {
                 </p>
               </div>
               <div className="pillar">
-                <span className="pillar-num">05</span>
+                <span className="pillar-num" aria-hidden="true">05</span>
                 <h3>Publicar</h3>
                 <p>
                   Configuramos el proyecto para que pueda utilizarse desde
@@ -332,7 +174,7 @@ export default function LandingPage() {
                 </p>
               </div>
               <div className="pillar">
-                <span className="pillar-num">06</span>
+                <span className="pillar-num" aria-hidden="true">06</span>
                 <h3>Mantener</h3>
                 <p>
                   Realizamos mejoras, correcciones y nuevas funciones según
@@ -455,32 +297,32 @@ export default function LandingPage() {
             </div>
             <div className="steps reveal">
               <div className="step">
-                <div className="step-num">AR</div>
-                <h4>Formosa, Argentina</h4>
+                <div className="step-num" aria-hidden="true">AR</div>
+                <h3>Formosa, Argentina</h3>
                 <p>
                   Desarrollamos soluciones para comercios y proyectos de
                   sistemas de gestión, incluyendo el rubro farmacia.
                 </p>
               </div>
               <div className="step">
-                <div className="step-num">PY</div>
-                <h4>Paraguay</h4>
+                <div className="step-num" aria-hidden="true">PY</div>
+                <h3>Paraguay</h3>
                 <p>
                   También trabajamos con clientes y proyectos fuera de
                   Argentina, ampliando nuestro alcance regional.
                 </p>
               </div>
               <div className="step">
-                <div className="step-num">01</div>
-                <h4>Desarrollo personalizado</h4>
+                <div className="step-num" aria-hidden="true">01</div>
+                <h3>Desarrollo personalizado</h3>
                 <p>
                   Cada propuesta se arma a partir de la necesidad del
                   negocio, sin vender funcionalidades innecesarias.
                 </p>
               </div>
               <div className="step">
-                <div className="step-num">02</div>
-                <h4>Acompañamiento directo</h4>
+                <div className="step-num" aria-hidden="true">02</div>
+                <h3>Acompañamiento directo</h3>
                 <p>
                   El cliente habla directamente con el equipo que analiza,
                   desarrolla y mantiene su solución.
@@ -513,12 +355,12 @@ export default function LandingPage() {
                   <div className="item">En curso</div>
                   <div className="item">En revisión</div>
                   <div className="item">Entregado</div>
-                  <div className="item" style={{ marginTop: 16, color: "#5E7071" }}>
-                    Documentación
-                  </div>
-                  <div className="item" style={{ color: "#5E7071" }}>
-                    Ambientes
-                  </div>
+                    <div className="item mock-side-muted mock-side-muted-spaced">
+                      Documentación
+                    </div>
+                    <div className="item mock-side-muted">
+                      Ambientes
+                    </div>
                 </div>
                 <div className="mock-main">
                   <div className="mock-row">
@@ -564,7 +406,7 @@ export default function LandingPage() {
                 </div>
               </div>
             </div>
-            <p style={{ marginTop: 18, textAlign: "center" }}>
+            <p className="mock-note">
               <Link href="/login" className="nav-login">
                 Este ejemplo es ilustrativo — si ya sos cliente, entrá a tu panel real acá
               </Link>
@@ -585,32 +427,32 @@ export default function LandingPage() {
             </div>
             <div className="steps reveal">
               <div className="step">
-                <div className="step-num">01</div>
-                <h4>Reunión inicial</h4>
+                <div className="step-num" aria-hidden="true">01</div>
+                <h3>Reunión inicial</h3>
                 <p>
                   Nos contás cómo trabaja tu negocio, cuál es el problema y
                   qué resultado querés conseguir.
                 </p>
               </div>
               <div className="step">
-                <div className="step-num">02</div>
-                <h4>Propuesta</h4>
+                <div className="step-num" aria-hidden="true">02</div>
+                <h3>Propuesta</h3>
                 <p>
                   Definimos funcionalidades, alcance, tiempos estimados y
                   presupuesto según el proyecto.
                 </p>
               </div>
               <div className="step">
-                <div className="step-num">03</div>
-                <h4>Desarrollo</h4>
+                <div className="step-num" aria-hidden="true">03</div>
+                <h3>Desarrollo</h3>
                 <p>
                   Avanzamos por etapas y mostramos el progreso para validar
                   que la solución responda a la necesidad real.
                 </p>
               </div>
               <div className="step">
-                <div className="step-num">04</div>
-                <h4>Entrega y soporte</h4>
+                <div className="step-num" aria-hidden="true">04</div>
+                <h3>Entrega y soporte</h3>
                 <p>
                   Implementamos la solución y podemos continuar con
                   mantenimiento, mejoras y nuevas funciones.
@@ -618,7 +460,7 @@ export default function LandingPage() {
               </div>
             </div>
 
-            <div style={{ marginTop: 64 }}>
+            <div className="plan-area">
               <div className="plan-grid reveal">
                 <div className="plan-card">
                   <h3>Sitio web</h3>
@@ -732,137 +574,10 @@ export default function LandingPage() {
         </section>
 
         {/* FAQ */}
-        <section className="section" id="faq">
-          <div className="wrap">
-            <div className="section-head reveal">
-              <span className="eyebrow">Preguntas frecuentes</span>
-              <h2>FAQ</h2>
-            </div>
-            <div className="faq-list reveal">
-              <div className="faq-item open">
-                <button
-                  id="faq-q-1"
-                  className="faq-q"
-                  aria-expanded="true"
-                  aria-controls="faq-a-1"
-                >
-                  <span>¿DevCore hace sistemas desde cero?</span>
-                  <span className="plus">+</span>
-                </button>
-                <div id="faq-a-1" className="faq-a" role="region" aria-labelledby="faq-q-1">
-                  <p>
-                    Sí. Podemos desarrollar una solución nueva a partir de
-                    los procesos y necesidades de tu negocio, y también
-                    mejorar proyectos existentes cuando el alcance lo
-                    permite.
-                  </p>
-                </div>
-              </div>
-
-              <div className="faq-item">
-                <button
-                  id="faq-q-2"
-                  className="faq-q"
-                  aria-expanded="false"
-                  aria-controls="faq-a-2"
-                >
-                  <span>¿Cómo se define el precio?</span>
-                  <span className="plus">+</span>
-                </button>
-                <div id="faq-a-2" className="faq-a" role="region" aria-labelledby="faq-q-2">
-                  <p>
-                    Primero relevamos lo que necesitás. Después armamos una
-                    propuesta según funcionalidades, complejidad, tiempos e
-                    integraciones. Preferimos cotizar cada proyecto de forma
-                    realista en lugar de publicar precios que después no
-                    coinciden con el trabajo.
-                  </p>
-                </div>
-              </div>
-
-              <div className="faq-item">
-                <button
-                  id="faq-q-3"
-                  className="faq-q"
-                  aria-expanded="false"
-                  aria-controls="faq-a-3"
-                >
-                  <span>¿Trabajan solo en Formosa?</span>
-                  <span className="plus">+</span>
-                </button>
-                <div id="faq-a-3" className="faq-a" role="region" aria-labelledby="faq-q-3">
-                  <p>
-                    No. Trabajamos de forma remota y actualmente tenemos
-                    alcance en Argentina y Paraguay.
-                  </p>
-                </div>
-              </div>
-
-              <div className="faq-item">
-                <button
-                  id="faq-q-4"
-                  className="faq-q"
-                  aria-expanded="false"
-                  aria-controls="faq-a-4"
-                >
-                  <span>¿Pueden integrar pagos o servicios externos?</span>
-                  <span className="plus">+</span>
-                </button>
-                <div id="faq-a-4" className="faq-a" role="region" aria-labelledby="faq-q-4">
-                  <p>
-                    Sí, cuando el proyecto lo requiere podemos integrar
-                    pasarelas de pago, APIs y otros servicios compatibles
-                    con la solución.
-                  </p>
-                </div>
-              </div>
-
-              <div className="faq-item">
-                <button
-                  id="faq-q-5"
-                  className="faq-q"
-                  aria-expanded="false"
-                  aria-controls="faq-a-5"
-                >
-                  <span>¿Qué pasa después de la entrega?</span>
-                  <span className="plus">+</span>
-                </button>
-                <div id="faq-a-5" className="faq-a" role="region" aria-labelledby="faq-q-5">
-                  <p>
-                    Podemos continuar con soporte, mantenimiento,
-                    correcciones y nuevas funcionalidades según lo que el
-                    negocio vaya necesitando.
-                  </p>
-                </div>
-              </div>
-
-              <div className="faq-item">
-                <button
-                  id="faq-q-6"
-                  className="faq-q"
-                  aria-expanded="false"
-                  aria-controls="faq-a-6"
-                >
-                  <span>¿Qué tecnologías utilizan?</span>
-                  <span className="plus">+</span>
-                </button>
-                <div id="faq-a-6" className="faq-a" role="region" aria-labelledby="faq-q-6">
-                  <p>
-                    Trabajamos con React, Next.js y Nest.js en el frontend y
-                    backend, bases de datos como PostgreSQL y MySQL/MariaDB,
-                    Prisma como ORM, autenticación con NextAuth, Git y
-                    GitHub para el control de versiones, y publicamos los
-                    proyectos en Vercel, además de integraciones y servicios
-                    externos según cada proyecto.
-                  </p>
-                </div>
-              </div>
-            </div>
-          </div>
-        </section>
+        <Faq />
 
         {/* CTA FINAL */}
-        <section className="section" style={{ paddingTop: 0 }}>
+        <section className="section cta-section">
           <div className="wrap">
             <div className="cta-band reveal">
               <span className="eyebrow">Hablemos</span>
@@ -887,7 +602,7 @@ export default function LandingPage() {
           <div className="foot-top">
             <div>
               <div className="foot-logo">
-                <Image src="/logo-horizontal.webp" alt="DevCore" width={150} height={28} />
+                <Image src="/logo-horizontal.webp" alt="DevCore" width={700} height={280} />
               </div>
               <p className="foot-tag">
                 Software a medida para negocios que quieren ordenar,
@@ -896,14 +611,14 @@ export default function LandingPage() {
             </div>
             <div className="foot-cols">
               <div className="foot-col">
-                <h5>DevCore</h5>
+                <h2>DevCore</h2>
                 <a href="#servicios">Servicios</a>
                 <a href="#industrias">Soluciones</a>
                 <a href="#planes">Cómo trabajamos</a>
                 <Link href="/login">Iniciar sesión</Link>
               </div>
               <div className="foot-col">
-                <h5>Contacto</h5>
+                <h2>Contacto</h2>
                 <a href="mailto:devcore97@gmail.com">devcore97@gmail.com</a>
                 <a href="#faq">Preguntas frecuentes</a>
               </div>
@@ -911,7 +626,7 @@ export default function LandingPage() {
           </div>
           <div className="foot-bottom">
             <span>© 2026 DevCore</span>
-            <Image className="icon" src="/icon.webp" alt="" width={16} height={16} />
+            <Image className="icon" src="/icon.webp" alt="" aria-hidden="true" width={16} height={16} />
           </div>
         </div>
       </footer>

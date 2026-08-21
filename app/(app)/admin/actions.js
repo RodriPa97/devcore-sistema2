@@ -16,55 +16,84 @@ import {
 } from "@/lib/validation";
 
 const SERIALIZABLE = { isolationLevel: Prisma.TransactionIsolationLevel.Serializable };
+const ADMIN_PATHS = new Set(["/admin/usuarios", "/admin/proyectos"]);
 
-function redirectError(path, message) {
-  redirect(`${path}?error=${encodeURIComponent(message)}`);
+class AdminActionError extends Error {
+  constructor(code) {
+    super(code);
+    this.name = "AdminActionError";
+    this.code = code;
+  }
+}
+
+function redirectAdmin(path, params) {
+  if (!ADMIN_PATHS.has(path)) throw new Error("Ruta de administración inválida.");
+  redirect(`${path}?${new URLSearchParams(params).toString()}`);
 }
 
 export async function cambiarRol(formData) {
   const actor = await requireAdmin();
   const parsed = roleChangeSchema.safeParse(formDataObject(formData));
 
-  if (!parsed.success) throw new Error("Datos inválidos.");
+  if (!parsed.success) {
+    redirectAdmin("/admin/usuarios", { error: "invalid-role" });
+  }
 
   const { userId, nuevoRol } = parsed.data;
   if (userId === actor.id && nuevoRol !== "ADMIN") {
-    throw new Error("No podés quitarte tu propio rol de administrador.");
+    redirectAdmin("/admin/usuarios", { error: "self-role" });
   }
 
-  await prisma.$transaction(async (tx) => {
-    const target = await tx.user.findUnique({
-      where: { id: userId },
-      select: { id: true, role: true, active: true },
-    });
-
-    if (!target) throw new Error("El usuario no existe.");
-
-    if (target.role === "ADMIN" && nuevoRol === "CLIENTE") {
-      const adminCount = await tx.user.count({
-        where: { role: "ADMIN", active: true },
+  let targetName;
+  try {
+    targetName = await prisma.$transaction(async (tx) => {
+      const target = await tx.user.findUnique({
+        where: { id: userId },
+        select: { id: true, name: true, role: true, active: true },
       });
-      if (adminCount <= 1) {
-        throw new Error("Debe quedar al menos un administrador activo.");
+
+      if (!target) throw new AdminActionError("user-not-found");
+
+      if (target.role === "ADMIN" && nuevoRol === "CLIENTE") {
+        const adminCount = await tx.user.count({
+          where: { role: "ADMIN", active: true },
+        });
+        if (adminCount <= 1) {
+          throw new AdminActionError("last-admin");
+        }
       }
+
+      await tx.user.update({
+        where: { id: userId },
+        data: { role: nuevoRol, sessionVersion: { increment: 1 } },
+      });
+
+      await recordAudit({
+        db: tx,
+        actorId: actor.id,
+        action: "ROLE_CHANGED",
+        entity: "User",
+        entityId: userId,
+        metadata: { from: target.role, to: nuevoRol },
+      });
+
+      return target.name;
+    }, SERIALIZABLE);
+  } catch (error) {
+    if (error instanceof AdminActionError) {
+      redirectAdmin("/admin/usuarios", { error: error.code });
     }
-
-    await tx.user.update({
-      where: { id: userId },
-      data: { role: nuevoRol, sessionVersion: { increment: 1 } },
-    });
-
-    await recordAudit({
-      db: tx,
-      actorId: actor.id,
-      action: "ROLE_CHANGED",
-      entity: "User",
-      entityId: userId,
-      metadata: { from: target.role, to: nuevoRol },
-    });
-  }, SERIALIZABLE);
+    if (error?.code === "P2034") {
+      redirectAdmin("/admin/usuarios", { error: "role-conflict" });
+    }
+    throw error;
+  }
 
   revalidatePath("/admin/usuarios");
+  redirectAdmin("/admin/usuarios", {
+    success: "role-updated",
+    subject: targetName,
+  });
 }
 
 export async function crearAdmin(formData) {
@@ -72,7 +101,7 @@ export async function crearAdmin(formData) {
   const parsed = adminSchema.safeParse(formDataObject(formData));
 
   if (!parsed.success) {
-    redirectError("/admin/usuarios", "Revisá nombre, email y contraseña.");
+    redirectAdmin("/admin/usuarios", { error: "invalid-admin" });
   }
 
   const { name, email, password } = parsed.data;
@@ -93,13 +122,16 @@ export async function crearAdmin(formData) {
     });
   } catch (error) {
     if (error?.code === "P2002") {
-      redirectError("/admin/usuarios", "Ya existe una cuenta con ese email.");
+      redirectAdmin("/admin/usuarios", { error: "email-exists" });
     }
     throw error;
   }
 
   revalidatePath("/admin/usuarios");
-  redirect("/admin/usuarios?ok=1");
+  redirectAdmin("/admin/usuarios", {
+    success: "admin-created",
+    subject: name,
+  });
 }
 
 export async function crearProyecto(formData) {
@@ -107,7 +139,7 @@ export async function crearProyecto(formData) {
   const parsed = projectCreationSchema.safeParse(formDataObject(formData));
 
   if (!parsed.success) {
-    redirectError("/admin/proyectos", "Revisá el nombre, cliente y estado.");
+    redirectAdmin("/admin/proyectos", { error: "invalid-project" });
   }
 
   const { name, clientId, status } = parsed.data;
@@ -117,27 +149,38 @@ export async function crearProyecto(formData) {
   });
 
   if (!client || client.role !== "CLIENTE" || !client.active) {
-    redirectError("/admin/proyectos", "Elegí un cliente activo válido.");
+    redirectAdmin("/admin/proyectos", { error: "invalid-client" });
   }
 
-  const project = await prisma.$transaction(async (tx) => {
-    const created = await tx.project.create({
-      data: { name, clientId, status, progress: 0 },
+  let project;
+  try {
+    project = await prisma.$transaction(async (tx) => {
+      const created = await tx.project.create({
+        data: { name, clientId, status, progress: 0 },
+      });
+      await recordAudit({
+        db: tx,
+        actorId: actor.id,
+        action: "PROJECT_CREATED",
+        entity: "Project",
+        entityId: created.id,
+        metadata: { clientId, status },
+      });
+      return created;
     });
-    await recordAudit({
-      db: tx,
-      actorId: actor.id,
-      action: "PROJECT_CREATED",
-      entity: "Project",
-      entityId: created.id,
-      metadata: { clientId, status },
-    });
-    return created;
-  });
+  } catch (error) {
+    if (error?.code === "P2003") {
+      redirectAdmin("/admin/proyectos", { error: "invalid-client" });
+    }
+    throw error;
+  }
 
   revalidatePath("/admin/proyectos");
   revalidatePath("/panel");
-  redirect(`/admin/proyectos?ok=1&project=${encodeURIComponent(project.id)}`);
+  redirectAdmin("/admin/proyectos", {
+    success: "project-created",
+    subject: project.name,
+  });
 }
 
 export async function actualizarProyecto(formData) {
@@ -145,68 +188,109 @@ export async function actualizarProyecto(formData) {
   const raw = formDataObject(formData);
   const parsed = projectUpdateSchema.safeParse(raw);
 
-  if (!parsed.success) throw new Error("Datos inválidos.");
+  if (!parsed.success) {
+    redirectAdmin("/admin/proyectos", { error: "invalid-update" });
+  }
 
   const { id, status, progress, notes, updatedAt } = parsed.data;
 
-  await prisma.$transaction(async (tx) => {
-    const previous = await tx.project.findUnique({
-      where: { id },
-      select: { status: true, progress: true, notes: true, updatedAt: true },
-    });
-    if (!previous) throw new Error("El proyecto no existe.");
-    if (previous.updatedAt.getTime() !== new Date(updatedAt).getTime()) {
-      throw new Error("El proyecto cambió mientras lo editabas. Recargá la página.");
-    }
-
-    await tx.project.update({
-      where: { id },
-      data: { status, progress, notes: notes || null },
-    });
-    await recordAudit({
-      db: tx,
-      actorId: actor.id,
-      action: "PROJECT_UPDATED",
-      entity: "Project",
-      entityId: id,
-      metadata: {
-        from: {
-          status: previous.status,
-          progress: previous.progress,
-          notes: previous.notes,
+  let projectName;
+  try {
+    projectName = await prisma.$transaction(async (tx) => {
+      const previous = await tx.project.findUnique({
+        where: { id },
+        select: {
+          name: true,
+          status: true,
+          progress: true,
+          notes: true,
+          updatedAt: true,
         },
-        to: { status, progress, notes: notes || null },
-      },
+      });
+      if (!previous) throw new AdminActionError("project-not-found");
+      if (previous.updatedAt.getTime() !== new Date(updatedAt).getTime()) {
+        throw new AdminActionError("stale-project");
+      }
+
+      await tx.project.update({
+        where: { id },
+        data: { status, progress, notes: notes || null },
+      });
+      await recordAudit({
+        db: tx,
+        actorId: actor.id,
+        action: "PROJECT_UPDATED",
+        entity: "Project",
+        entityId: id,
+        metadata: {
+          from: {
+            status: previous.status,
+            progress: previous.progress,
+            notes: previous.notes,
+          },
+          to: { status, progress, notes: notes || null },
+        },
+      });
+
+      return previous.name;
     });
-  });
+  } catch (error) {
+    if (error instanceof AdminActionError) {
+      redirectAdmin("/admin/proyectos", { error: error.code });
+    }
+    if (error?.code === "P2025") {
+      redirectAdmin("/admin/proyectos", { error: "project-not-found" });
+    }
+    throw error;
+  }
 
   revalidatePath("/admin/proyectos");
   revalidatePath("/panel");
+  redirectAdmin("/admin/proyectos", {
+    success: "project-updated",
+    subject: projectName,
+  });
 }
 
 export async function eliminarProyecto(formData) {
   const actor = await requireAdmin();
   const id = formData.get("id")?.toString().trim();
-  if (!id) throw new Error("Datos inválidos.");
+  if (!id || id.length > 100) {
+    redirectAdmin("/admin/proyectos", { error: "invalid-delete" });
+  }
 
-  await prisma.$transaction(async (tx) => {
-    const project = await tx.project.findUnique({
-      where: { id },
-      select: { name: true, clientId: true },
-    });
-    if (!project) throw new Error("El proyecto no existe.");
+  let projectName;
+  try {
+    projectName = await prisma.$transaction(async (tx) => {
+      const project = await tx.project.findUnique({
+        where: { id },
+        select: { name: true, clientId: true },
+      });
+      if (!project) throw new AdminActionError("project-not-found");
 
-    await tx.project.delete({ where: { id } });
-    await recordAudit({
-      db: tx,
-      actorId: actor.id,
-      action: "PROJECT_DELETED",
-      entity: "Project",
-      entityId: id,
-      metadata: project,
+      await tx.project.delete({ where: { id } });
+      await recordAudit({
+        db: tx,
+        actorId: actor.id,
+        action: "PROJECT_DELETED",
+        entity: "Project",
+        entityId: id,
+        metadata: project,
+      });
+
+      return project.name;
     });
-  });
+  } catch (error) {
+    if (error instanceof AdminActionError || error?.code === "P2025") {
+      redirectAdmin("/admin/proyectos", { error: "project-not-found" });
+    }
+    throw error;
+  }
 
   revalidatePath("/admin/proyectos");
   revalidatePath("/panel");
+  redirectAdmin("/admin/proyectos", {
+    success: "project-deleted",
+    subject: projectName,
+  });
 }

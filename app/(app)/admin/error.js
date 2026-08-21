@@ -9,7 +9,7 @@ export default function AdminError({ reset }) {
       <button
         type="button"
         onClick={() => reset()}
-        className="btn-primary w-fit rounded-lg px-4 py-2 font-mono text-sm"
+        className="btn-primary min-h-11 w-fit rounded-lg px-4 py-2 font-mono text-sm"
       >
         Reintentar
       </button>
